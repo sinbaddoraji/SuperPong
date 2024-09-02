@@ -16,8 +16,6 @@ namespace PingPong.Screens
     internal class PongGameScreen : IGameScreen
     {
 
-        private bool _isAgainstComputer = false;
-
         Texture2D ballTexture;
         Vector2 ballPosition;
         Vector2 ballVelocity;
@@ -25,8 +23,8 @@ namespace PingPong.Screens
         Vector2 paddle1Position;
         Vector2 paddle2Position;
 
-        float paddleSpeed = 200f;
-        float ballSpeedIncrease = 10f; // Increase in ball speed over time
+        float paddleSpeed = 800f;
+        float ballSpeedIncrease = 5f; // Increase in ball speed over time
 
         private Texture2D _paddleTexture2D;
 
@@ -38,6 +36,15 @@ namespace PingPong.Screens
 
         private GraphicsDeviceManager _graphics;
         private readonly SpriteBatch _spriteBatch;
+
+        private int ballDiameter = 20;
+
+        private float cpuReactionTime = 0.1f; // Time in seconds before CPU reacts
+        private float cpuReactionTimer = 0f;  // Timer for the reaction delay
+        private float cpuErrorMargin = 10f;   // Adds a margin of error to make the CPU less perfect
+
+
+
 
         public GameMode GameMode { get; set; }
 
@@ -51,8 +58,8 @@ namespace PingPong.Screens
 
         public PongGameScreen(GraphicsDevice graphicsDevice, GraphicsDeviceManager graphics)
         {
-            ballTexture = BallTexture.CreateBallTexture(graphicsDevice, 40);
-            _paddleTexture2D = PaddleTexture.CreatePaddleTexture(graphicsDevice, 100, 20);
+            ballTexture = BallTexture.CreateBallTexture(graphicsDevice, ballDiameter);
+            _paddleTexture2D = PaddleTexture.CreatePaddleTexture(graphicsDevice, 300, 20);
 
 
             _graphics = graphics;
@@ -72,6 +79,8 @@ namespace PingPong.Screens
 
 
 
+       
+
         public async Task Update(GameTime gameTime)
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -79,40 +88,34 @@ namespace PingPong.Screens
             var kstate = Keyboard.GetState();
 
             // Player 1 controls (A and D keys for left and right movement)
-            if (kstate.IsKeyDown(Keys.A))
+            if (GameMode == GameMode.PlayerToComputer)
             {
-                paddle1Position.X -= paddleSpeed * deltaTime;
-            }
-            if (kstate.IsKeyDown(Keys.D))
-            {
-                paddle1Position.X += paddleSpeed * deltaTime;
-            }
-
-            // Player 2 or Computer controls
-            if (_isAgainstComputer)
-            {
-                // Simple AI: Move the paddle towards the ball
-                if (paddle2Position.X + _paddleTexture2D.Width / 2 < ballPosition.X)
-                {
-                    paddle2Position.X += paddleSpeed * deltaTime;
-                }
-                else if (paddle2Position.X + _paddleTexture2D.Width / 2 > ballPosition.X)
-                {
-                    paddle2Position.X -= paddleSpeed * deltaTime;
-                }
+                
+                HandleComputerLogic(ref paddle1Position, gameTime);
             }
             else
             {
-                // Player 2 controls (Left and Right keys for left and right movement)
-                if (kstate.IsKeyDown(Keys.Left))
+                if (kstate.IsKeyDown(Keys.A))
                 {
-                    paddle2Position.X -= paddleSpeed * deltaTime;
+                    paddle1Position.X -= paddleSpeed * deltaTime;
                 }
-                if (kstate.IsKeyDown(Keys.Right))
+
+                if (kstate.IsKeyDown(Keys.D))
                 {
-                    paddle2Position.X += paddleSpeed * deltaTime;
+                    paddle1Position.X += paddleSpeed * deltaTime;
                 }
             }
+
+            // Player 2 controls (Left and Right keys for left and right movement)
+            if (kstate.IsKeyDown(Keys.Left))
+            {
+                paddle2Position.X -= paddleSpeed * deltaTime;
+            }
+            if (kstate.IsKeyDown(Keys.Right))
+            {
+                paddle2Position.X += paddleSpeed * deltaTime;
+            }
+
 
             // Ensure paddles stay within screen bounds
             paddle1Position.X = MathHelper.Clamp(paddle1Position.X, 0, screenWidth - _paddleTexture2D.Width * paddleScale.X);
@@ -151,8 +154,33 @@ namespace PingPong.Screens
             {
                 InitializeGame();
             }
+
         }
 
+       
+        private void HandleComputerLogic(ref Vector2 p0, GameTime gameTime)
+        {
+            cpuReactionTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (cpuReactionTimer >= cpuReactionTime)
+            {
+                cpuReactionTimer = 0f;
+
+                // Calculate the ball's position when it reaches the CPU's paddle
+                float t = (p0.Y - ballPosition.Y) / ballVelocity.Y;
+                float x = ballPosition.X + ballVelocity.X * t;
+
+                // Move the CPU's paddle towards the ball's position
+                if (x < p0.X + cpuErrorMargin)
+                {
+                    p0.X -= paddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                }
+                else if (x > p0.X + _paddleTexture2D.Width * paddleScale.X - cpuErrorMargin)
+                {
+                    p0.X += paddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                }
+            }
+        }
 
         public async Task Draw(GameTime gameTime, SpriteBatch spriteBatch)
         {

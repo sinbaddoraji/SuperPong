@@ -2,7 +2,7 @@
 
 public enum GameMode
 {
+    Arcade,
     PlayerToPlayer,
-    PlayerToComputer,
-    ComputerToComputer
+    PlayerToComputer
 }

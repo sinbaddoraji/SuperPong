@@ -153,7 +153,7 @@ namespace PingPong.Screens
                 else if (keyboardState.IsKeyDown(Keys.Enter))
                 {
                     // Trigger the event and pass the selected option to the parent object
-                    OnMenuOptionSelected?.Invoke(_menuSelection);
+                    OnMenuOptionSelected?.Invoke(_menuSelection - 1);
                 }
             }
             
