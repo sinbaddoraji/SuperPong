@@ -24,7 +24,7 @@ namespace PingPong.Screens
         Vector2 paddle2Position;
 
         float paddleSpeed = 800f;
-        float ballSpeedIncrease = 5f; // Increase in ball speed over time
+        float ballSpeedIncrease = 1.2f; // Increase in ball speed over time
 
         private Texture2D _paddleTexture2D;
 
@@ -39,11 +39,15 @@ namespace PingPong.Screens
 
         private int ballDiameter = 20;
 
+        private float cpu1ReactionTimer = 0f;  // Timer for the reaction delay
+        private float cpu2ReactionTimer = 0.1f; // Time in seconds before CPU reacts
+
         private float cpuReactionTime = 0.1f; // Time in seconds before CPU reacts
-        private float cpuReactionTimer = 0f;  // Timer for the reaction delay
+       
         private float cpuErrorMargin = 10f;   // Adds a margin of error to make the CPU less perfect
 
-
+        public bool player1IsCPU = false;
+        public bool player2IsCPU = false;
 
 
         public GameMode GameMode { get; set; }
@@ -88,10 +92,10 @@ namespace PingPong.Screens
             var kstate = Keyboard.GetState();
 
             // Player 1 controls (A and D keys for left and right movement)
-            if (GameMode == GameMode.PlayerToComputer)
+            if (player1IsCPU)
             {
                 
-                HandleComputerLogic(ref paddle1Position, gameTime);
+                HandleComputerLogic(ref paddle1Position, ref cpu1ReactionTimer, gameTime);
             }
             else
             {
@@ -107,14 +111,22 @@ namespace PingPong.Screens
             }
 
             // Player 2 controls (Left and Right keys for left and right movement)
-            if (kstate.IsKeyDown(Keys.Left))
+            if (player2IsCPU)
             {
-                paddle2Position.X -= paddleSpeed * deltaTime;
+                HandleComputerLogic(ref paddle2Position, ref cpu2ReactionTimer, gameTime);
             }
-            if (kstate.IsKeyDown(Keys.Right))
+            else
             {
-                paddle2Position.X += paddleSpeed * deltaTime;
+                if (kstate.IsKeyDown(Keys.Left))
+                {
+                    paddle2Position.X -= paddleSpeed * deltaTime;
+                }
+                if (kstate.IsKeyDown(Keys.Right))
+                {
+                    paddle2Position.X += paddleSpeed * deltaTime;
+                }
             }
+
 
 
             // Ensure paddles stay within screen bounds
@@ -155,10 +167,15 @@ namespace PingPong.Screens
                 InitializeGame();
             }
 
+            // Update paddle speed based on the ball's speed
+            paddleSpeed = ballVelocity.Length() * 2.5f;
+            ComputerPaddleSpeed = paddleSpeed * 2.5f;
+
         }
 
+        private float ComputerPaddleSpeed = 1000;
        
-        private void HandleComputerLogic(ref Vector2 p0, GameTime gameTime)
+        private void HandleComputerLogic(ref Vector2 p0, ref float cpuReactionTimer, GameTime gameTime)
         {
             cpuReactionTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -173,11 +190,11 @@ namespace PingPong.Screens
                 // Move the CPU's paddle towards the ball's position
                 if (x < p0.X + cpuErrorMargin)
                 {
-                    p0.X -= paddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    p0.X -= ComputerPaddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 }
                 else if (x > p0.X + _paddleTexture2D.Width * paddleScale.X - cpuErrorMargin)
                 {
-                    p0.X += paddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    p0.X += ComputerPaddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 }
             }
         }

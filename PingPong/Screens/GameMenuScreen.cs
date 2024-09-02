@@ -34,6 +34,10 @@ namespace PingPong.Screens
 
         private Vector2 optionThreePosition;
 
+        private Vector2 optionFourPosition;
+
+        private Vector2 optionFivePosition;
+
         private Vector2 _selectorPosition;
         private Vector2 _selector2Position;
 
@@ -43,15 +47,21 @@ namespace PingPong.Screens
 
         private Vector2 optionThreeSize;
 
+        private Vector2 optionFourSize;
+
+        private Vector2 optionFiveSize;
+
         private Vector2 titleSize;
 
         private Vector2 titlePosition;
 
         string titleName = "Super Pong";
 
-        string optionOne = "Arcade Mode";
-        string optionTwo = "Player vs Player";
-        string optionThree = "Player vs Computer";
+        private string optionOne = "Arcade Mode";
+        private string optionTwo = "Player vs Player";
+        private string optionThree = "Player vs Computer";
+        private string optionFour = "Comuter vs Computer";
+        private string optionFive = "Exit";
 
         public delegate void MenuOptionSelectedHandler(int selectedOption);
         public event MenuOptionSelectedHandler OnMenuOptionSelected;
@@ -109,6 +119,8 @@ namespace PingPong.Screens
             optionOneSize = _menuItemFont.MeasureString(optionOne);
             optionTwoSize = _menuItemFont.MeasureString(optionTwo);
             optionThreeSize = _menuItemFont.MeasureString(optionThree);
+            optionFourSize = _menuItemFont.MeasureString(optionFour);
+            optionFiveSize = _menuItemFont.MeasureString(optionFive);
 
             _selectorPosition = new Vector2((_screenWidth / 2 - (_menuSelectionTexture.Width * 1.5f) / 2) - 200, 200);
             _selector2Position = new Vector2((_screenWidth / 2 - (_menuSelectionTexture.Width * 1.5f) / 2) + 300, 200);
@@ -116,6 +128,8 @@ namespace PingPong.Screens
             optionOnePosition = new Vector2(_screenWidth / 2 - optionOneSize.X / 2, 200);
             optionTwoPosition = new Vector2(_screenWidth / 2 - optionTwoSize.X / 2, 250);
             optionThreePosition = new Vector2(_screenWidth / 2 - optionThreeSize.X / 2, 300);
+            optionFourPosition = new Vector2(_screenWidth / 2 - optionFourSize.X / 2, 350);
+            optionFivePosition = new Vector2(_screenWidth / 2 - optionFiveSize.X / 2, 400);
 
             return Task.CompletedTask;
         }
@@ -136,7 +150,7 @@ namespace PingPong.Screens
             // Move the selector up and down
             if (_timeSinceLastInput >= _inputCooldown)
             {
-                if (keyboardState.IsKeyDown(Keys.Down) && _menuSelection < 3)
+                if (keyboardState.IsKeyDown(Keys.Down) && _menuSelection < 5)
                 {
                     _menuSelection++;
                     _selectorPosition.Y += 50;
@@ -192,6 +206,13 @@ namespace PingPong.Screens
 
             spriteBatch.DrawString(_menuItemFont, optionThree, optionThreePosition,
                 _menuSelection == 3 ? SelectedMenuColor : Color.White);
+
+            spriteBatch.DrawString(_menuItemFont, optionFour, optionFourPosition,
+                _menuSelection == 4 ? SelectedMenuColor : Color.White);
+
+            spriteBatch.DrawString(_menuItemFont, optionFive, optionFivePosition,
+                _menuSelection == 5 ? SelectedMenuColor : Color.White);
+
         }
 
         public async Task UnloadContent()

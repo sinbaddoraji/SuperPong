@@ -23,11 +23,8 @@ namespace PingPong
         {
             _graphics = new GraphicsDeviceManager(this);
            
-
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
-
-           
 
             // Set window size
             _graphics.PreferredBackBufferWidth = 1200;
@@ -45,10 +42,26 @@ namespace PingPong
             _pongGameScreen = new PongGameScreen(GraphicsDevice, _graphics);
 
             // Subscribe to event
-            ((GameMenuScreen)_mainMenyScreen).OnMenuOptionSelected += (selectedOption) =>
+            ((GameMenuScreen)_mainMenyScreen).OnMenuOptionSelected += selectedOption =>
             {
                 _currentGameState = GameState.Playing;
                _pongGameScreen.GameMode =  (GameMode)selectedOption;
+
+               if ((GameMode)selectedOption == GameMode.PlayerToPlayer)
+               {
+                   _pongGameScreen.player1IsCPU = false;
+                   _pongGameScreen.player2IsCPU = false;
+               }
+               else if ((GameMode)selectedOption == GameMode.PlayerToComputer)
+               {
+                   _pongGameScreen.player1IsCPU = true;
+                   _pongGameScreen.player2IsCPU = false;
+               }
+               else if ((GameMode)selectedOption == GameMode.ComputerToComputer)
+               {
+                   _pongGameScreen.player1IsCPU = true;
+                   _pongGameScreen.player2IsCPU = true;
+               }
             };
 
             // Initialize screens
