@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using PingPong.Enum;
-using PingPong.Inerface;
+using PingPong.Interface;
 using PingPong.Screens;
 
 namespace PingPong

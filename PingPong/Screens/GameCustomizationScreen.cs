@@ -6,14 +6,32 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using PingPong.Inerface;
+using PingPong.Interface;
 
 namespace PingPong.Screens
 {
 
-    internal class GameCustomizationScreen : IGameScreen
+    internal class GameCustomizationScreen : IGameEntity
     {
         public async Task Initialize(ContentManager contentManager)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Vector2 Position { get; set; }
+        public Texture2D Texture { get; set; }
+
+        public Rectangle GetRectangle()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IGameEntity.Update(GameTime gameTime)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IGameEntity.Draw(GameTime gameTime, SpriteBatch spriteBatch)
         {
             throw new NotImplementedException();
         }

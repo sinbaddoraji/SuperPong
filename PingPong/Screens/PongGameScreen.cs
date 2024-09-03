@@ -9,11 +9,12 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using PingPong.Enum;
-using PingPong.Inerface;
+using PingPong.Interface;
+using PingPong.SimpleSprite;
 
 namespace PingPong.Screens
 {
-    internal class PongGameScreen : IGameScreen
+    internal class PongGameScreen : IGameEntity
     {
 
         Texture2D ballTexture;
@@ -82,8 +83,23 @@ namespace PingPong.Screens
         }
 
 
+        public Vector2 Position { get; set; }
+        public Texture2D Texture { get; set; }
 
-       
+        public Rectangle GetRectangle()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IGameEntity.Update(GameTime gameTime)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IGameEntity.Draw(GameTime gameTime, SpriteBatch spriteBatch)
+        {
+            throw new NotImplementedException();
+        }
 
         public async Task Update(GameTime gameTime)
         {

@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace PingPong.Screens;
+namespace PingPong.SimpleSprite;
 
 internal class BallTexture
 {

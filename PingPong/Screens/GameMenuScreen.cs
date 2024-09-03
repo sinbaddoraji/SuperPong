@@ -6,13 +6,14 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using PingPong.Inerface;
+using PingPong.Implementation.GameEntitiy;
+using PingPong.Interface;
 using PingPong.Properties;
 using PingPong.SimpleSprite;
 
 namespace PingPong.Screens
 {
-    public class GameMenuScreen : IGameScreen
+    public class GameMenuScreen : IGameEntity, IGameScreen
     {
         private Game _game;
         private GraphicsDeviceManager _graphics;
@@ -81,7 +82,9 @@ namespace PingPong.Screens
             _screenHeight = _graphics.PreferredBackBufferHeight;
         }
 
-        public Task Initialize(ContentManager contentManager)
+        public (int, int) ScreenSize { get; set; }
+
+        public void Initialize(ContentManager contentManager)
         {
             _random = new Random();
             _snowflakes = new List<Snowflake>();
@@ -110,7 +113,11 @@ namespace PingPong.Screens
             {
                 var position = new Vector2(_random.Next(_screenWidth), _random.Next(_screenHeight));
                 var speed = (float)_random.NextDouble() * 50 + 50; // Random speed between 50 and 100
-                _snowflakes.Add(new Snowflake(position, speed, _snowflakeTexture));
+                _snowflakes.Add(
+                    new Snowflake(position, speed, _snowflakeTexture)
+                    {
+                        ParentSize = (_screenWidth, _screenHeight)
+                    });
             }
 
             titleSize = _menuTitleFont.MeasureString(titleName); 
@@ -131,7 +138,34 @@ namespace PingPong.Screens
             optionFourPosition = new Vector2(_screenWidth / 2 - optionFourSize.X / 2, 350);
             optionFivePosition = new Vector2(_screenWidth / 2 - optionFiveSize.X / 2, 400);
 
-            return Task.CompletedTask;
+        }
+
+        public void DrawEntities(List<IGameEntity> gameEntities)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateEntities(List<IGameEntity> gameEntities)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UnloadContent()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Vector2 Position { get; set; }
+        public Texture2D Texture { get; set; }
+
+        public Rectangle GetRectangle()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IGameEntity.Update(GameTime gameTime)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task Update(GameTime gameTime)
@@ -141,7 +175,7 @@ namespace PingPong.Screens
             // Update snowflakes
             foreach (var snowflake in _snowflakes)
             {
-                snowflake.Update(gameTime, _screenWidth, _screenHeight);
+                snowflake.Update(gameTime);
             }
 
             // Handle menu selection
@@ -175,15 +209,13 @@ namespace PingPong.Screens
 
         
 
-        public async Task Draw(GameTime gameTime, SpriteBatch spriteBatch)
+        public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
         {
-          
-
             // Draw snowflakes
 
             foreach (var snowflake in _snowflakes)
             {
-                snowflake.Draw(spriteBatch);
+                snowflake.Draw(gameTime,spriteBatch);
             }
 
             // Draw the menu selector
@@ -213,11 +245,6 @@ namespace PingPong.Screens
             spriteBatch.DrawString(_menuItemFont, optionFive, optionFivePosition,
                 _menuSelection == 5 ? SelectedMenuColor : Color.White);
 
-        }
-
-        public async Task UnloadContent()
-        {
-            throw new NotImplementedException();
         }
     }
 }
