@@ -31,10 +31,11 @@ namespace PingPong.Screens
             throw new NotImplementedException();
         }
 
-        void IGameEntity.Draw(GameTime gameTime, SpriteBatch spriteBatch)
+        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, Color color)
         {
             throw new NotImplementedException();
         }
+
 
         public async Task Update(GameTime gameTime)
         {

@@ -21,19 +21,14 @@ public class GameEntity : IGameEntity
 
     }
 
-    public virtual void Draw(GameTime gameTime, SpriteBatch spriteBatch)
+    public virtual void Draw(GameTime gameTime, SpriteBatch spriteBatch, Color color)
     {
-        spriteBatch.Draw(Texture, Position, Color.White);
+        spriteBatch.Draw(Texture, Position, color);
     }
 
     public virtual void DrawText(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont, string text, Color textColor)
     {
         spriteBatch.DrawString(spriteFont, text, Position, textColor);
-    }
-
-    public Vector2 GetSize()
-    {
-        return new Vector2(Texture.Width, Texture.Height);
     }
 
     public Rectangle GetRectangle()

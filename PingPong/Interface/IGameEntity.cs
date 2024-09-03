@@ -14,5 +14,5 @@ public interface IGameEntity
 
     void Update(GameTime gameTime);
 
-    void Draw(GameTime gameTime, SpriteBatch spriteBatch);
+    void Draw(GameTime gameTime, SpriteBatch spriteBatch, Color color);
 }

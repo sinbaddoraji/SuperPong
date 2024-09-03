@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace PingPong.Interface
 {
@@ -8,11 +10,13 @@ namespace PingPong.Interface
     {
         (int,int) ScreenSize { get; set; }
 
+        List<IGameEntity> GameEntities { get; set; }
+
         void Initialize(ContentManager contentManager);
 
-        void DrawEntities(List<IGameEntity> gameEntities);
+        void DrawEntities(GameTime gameTime, SpriteBatch spriteBatch);
 
-        void UpdateEntities(List<IGameEntity> gameEntities);
+        void UpdateEntities(GameTime gameTime);
 
         void UnloadContent();
     }

@@ -15,7 +15,7 @@ namespace PingPong
 
 
         private IGameScreen _mainMenyScreen;
-        private PongGameScreen _pongGameScreen;
+        private IGameScreen _pongGameScreen;
 
         private GameState _currentGameState = GameState.MainMenu;
 
@@ -42,27 +42,27 @@ namespace PingPong
             _pongGameScreen = new PongGameScreen(GraphicsDevice, _graphics);
 
             // Subscribe to event
-            ((GameMenuScreen)_mainMenyScreen).OnMenuOptionSelected += selectedOption =>
-            {
-                _currentGameState = GameState.Playing;
-               _pongGameScreen.GameMode =  (GameMode)selectedOption;
+            //((GameMenuScreen)_mainMenyScreen).OnMenuOptionSelected += selectedOption =>
+            //{
+            //   // _currentGameState = GameState.Playing;
+            //   //_pongGameScreen.GameMode =  (GameMode)selectedOption;
 
-               if ((GameMode)selectedOption == GameMode.PlayerToPlayer)
-               {
-                   _pongGameScreen.player1IsCPU = false;
-                   _pongGameScreen.player2IsCPU = false;
-               }
-               else if ((GameMode)selectedOption == GameMode.PlayerToComputer)
-               {
-                   _pongGameScreen.player1IsCPU = true;
-                   _pongGameScreen.player2IsCPU = false;
-               }
-               else if ((GameMode)selectedOption == GameMode.ComputerToComputer)
-               {
-                   _pongGameScreen.player1IsCPU = true;
-                   _pongGameScreen.player2IsCPU = true;
-               }
-            };
+            //   //if ((GameMode)selectedOption == GameMode.PlayerToPlayer)
+            //   //{
+            //   //    _pongGameScreen.player1IsCPU = false;
+            //   //    _pongGameScreen.player2IsCPU = false;
+            //   //}
+            //   //else if ((GameMode)selectedOption == GameMode.PlayerToComputer)
+            //   //{
+            //   //    _pongGameScreen.player1IsCPU = true;
+            //   //    _pongGameScreen.player2IsCPU = false;
+            //   //}
+            //   //else if ((GameMode)selectedOption == GameMode.ComputerToComputer)
+            //   //{
+            //   //    _pongGameScreen.player1IsCPU = true;
+            //   //    _pongGameScreen.player2IsCPU = true;
+            //   //}
+            //};
 
             // Initialize screens
             _mainMenyScreen.Initialize(Content);
@@ -79,10 +79,10 @@ namespace PingPong
             switch (_currentGameState)
             {
                 case GameState.MainMenu:
-                    _mainMenyScreen.Update(gameTime);
+                    _mainMenyScreen.UpdateEntities(gameTime);
                     break;
                 case GameState.Playing:
-                    _pongGameScreen.Update(gameTime);
+                    _pongGameScreen.UpdateEntities(gameTime);
                     break;
             }
 
@@ -97,14 +97,25 @@ namespace PingPong
 
             _spriteBatch.Begin();
 
-            if (_currentGameState == GameState.MainMenu)
+            //if (_currentGameState == GameState.MainMenu)
+            //{
+            //    _mainMenyScreen.Draw(gameTime, _spriteBatch);
+            //}
+            //else if (_currentGameState == GameState.Playing)
+            //{
+            //    _pongGameScreen.Draw(gameTime, _spriteBatch);
+            //}
+
+            switch (_currentGameState)
             {
-                _mainMenyScreen.Draw(gameTime, _spriteBatch);
+                case GameState.MainMenu:
+                    _mainMenyScreen.DrawEntities(gameTime, _spriteBatch);
+                    break;
+                case GameState.Playing:
+                    _pongGameScreen.DrawEntities(gameTime, _spriteBatch);
+                    break;
             }
-            else if (_currentGameState == GameState.Playing)
-            {
-                _pongGameScreen.Draw(gameTime, _spriteBatch);
-            }
+
 
             _spriteBatch.End();
 

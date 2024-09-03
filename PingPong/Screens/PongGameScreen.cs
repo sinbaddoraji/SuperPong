@@ -14,7 +14,7 @@ using PingPong.SimpleSprite;
 
 namespace PingPong.Screens
 {
-    internal class PongGameScreen : IGameEntity
+    internal class PongGameScreen : IGameScreen
     {
 
         Texture2D ballTexture;
@@ -52,6 +52,28 @@ namespace PingPong.Screens
 
 
         public GameMode GameMode { get; set; }
+
+        public (int, int) ScreenSize { get; set; }
+        public List<IGameEntity> GameEntities { get; set; }
+        void IGameScreen.Initialize(ContentManager contentManager)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public void DrawEntities(GameTime gameTime, SpriteBatch spriteBatch)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateEntities(GameTime gameTime)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IGameScreen.UnloadContent()
+        {
+            throw new NotImplementedException();
+        }
 
         public async Task Initialize(ContentManager contentManager)
         {
@@ -91,15 +113,12 @@ namespace PingPong.Screens
             throw new NotImplementedException();
         }
 
-        void IGameEntity.Update(GameTime gameTime)
+
+        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, Color color)
         {
             throw new NotImplementedException();
         }
 
-        void IGameEntity.Draw(GameTime gameTime, SpriteBatch spriteBatch)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task Update(GameTime gameTime)
         {
