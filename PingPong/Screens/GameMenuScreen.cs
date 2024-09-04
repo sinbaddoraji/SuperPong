@@ -94,17 +94,17 @@ public class GameMenuScreen : IGameScreen
         GameEntities.ForEach(entity => entity.Update(gameTime));
     }
 
-    public void NavigateTo(string pageName)
+    public void NavigateTo(INavigationManager navigationManager, string pageName)
     {
         // Do Not
     }
 
-    public void OnNavigateTo(dynamic parameters)
+    public void OnNavigateTo(INavigationManager navigationManager, dynamic parameters)
     {
         // Do nothing
     }
 
-    public void NavigateBackward()
+    public void NavigateBackward(INavigationManager navigationManager)
     {
         // Do nothing
     }

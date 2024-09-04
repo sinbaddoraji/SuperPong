@@ -9,7 +9,7 @@ namespace PingPong.SimpleSprite
 {
     internal class PaddleTexture
     {
-        public static Texture2D CreatePaddleTexture(GraphicsDevice graphicsDevice, int width, int height)
+        public static Texture2D CreatePaddleTexture(GraphicsDevice graphicsDevice, Color color, int width, int height)
         {
             // Create paddle texture
             Texture2D texture = new Texture2D(graphicsDevice, width, height);
@@ -24,7 +24,7 @@ namespace PingPong.SimpleSprite
                     // Create a simple rectangle-shaped paddle
                     if (x == 0 || y == 0 || x == width - 1 || y == height - 1)
                     {
-                        data[y * width + x] = Color.White;
+                        data[y * width + x] = color;
                     }
                     else
                     {

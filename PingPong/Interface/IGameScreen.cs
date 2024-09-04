@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace PingPong.Interface
 {
-    internal interface IGameScreen
+    public interface IGameScreen
     {
         (int,int) ScreenSize { get; set; }
 
@@ -18,10 +18,10 @@ namespace PingPong.Interface
 
         void UpdateEntities(GameTime gameTime);
 
-        void NavigateTo(string pageName);
+        void NavigateTo(INavigationManager navigationManager, string pageName);
 
-        void OnNavigateTo(dynamic parameters);
+        void OnNavigateTo(INavigationManager navigationManager, dynamic parameters);
 
-        void NavigateBackward();
+        void NavigateBackward(INavigationManager navigationManager);
     }
 }

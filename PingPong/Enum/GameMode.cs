@@ -7,3 +7,10 @@ public enum GameMode
     PlayerToComputer,
     ComputerToComputer
 }
+
+public enum GameState
+{
+    Player1WaitingToServe,
+    Player2WaitingToServe,
+    Playing
+}

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace PingPong.Interface
 {
-    internal interface INavigationManager
+    public interface INavigationManager
     {
         void RegisterScreen(string screenName, IGameScreen screen);
 

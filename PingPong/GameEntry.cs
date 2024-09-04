@@ -18,6 +18,7 @@ namespace PingPong
         private IGameScreen _pongGameScreen;
         private INavigationManager _navigationManager;
 
+
         public PongGame()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -64,6 +65,14 @@ namespace PingPong
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
                 Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+
+
+            var keyboardState = Keyboard.GetState();
+
+            if (keyboardState.IsKeyDown(Keys.Delete))
+            {
+                _navigationManager.NavigateBackward();
+            }
 
             _navigationManager.CurrentScreen.UpdateEntities(gameTime);
             

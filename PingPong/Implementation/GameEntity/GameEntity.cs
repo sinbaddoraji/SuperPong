@@ -12,6 +12,10 @@ public class GameEntity : IGameEntity
     public Vector2 Position { get; set; }
     public Texture2D Texture { get; set; }
 
+    public bool IsVisible { get; set; } = true;
+
+    public bool IsActive { get; set; } = false;
+
     // Define update event
     public event EventHandler<IGameEntity> UpdateEvent;
 
@@ -23,12 +27,14 @@ public class GameEntity : IGameEntity
 
     public virtual void Draw(GameTime gameTime, SpriteBatch spriteBatch, Color color)
     {
-        spriteBatch.Draw(Texture, Position, color);
+        if(IsVisible)
+            spriteBatch.Draw(Texture, Position, color);
     }
 
     public virtual void DrawText(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont, string text, Color textColor)
     {
-        spriteBatch.DrawString(spriteFont, text, Position, textColor);
+        if (IsVisible)
+            spriteBatch.DrawString(spriteFont, text, Position, textColor);
     }
 
     public Rectangle GetRectangle()

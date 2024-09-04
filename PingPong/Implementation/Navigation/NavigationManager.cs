@@ -54,7 +54,7 @@ namespace PingPong.Implementation.Navigation
             CurrentScreen = screen;
 
             // Pass parameters to the screen
-            CurrentScreen.OnNavigateTo(parameters);
+            CurrentScreen.OnNavigateTo(this, parameters);
         }
 
         // Navigate back to the previous screen.
@@ -71,7 +71,7 @@ namespace PingPong.Implementation.Navigation
             }
             else
             {
-                throw new InvalidOperationException("No previous screens to navigate back to.");
+                //throw new InvalidOperationException("No previous screens to navigate back to.");
             }
         }
 
