@@ -39,6 +39,8 @@ namespace PingPong
 
             // Initialize screens
             _mainMenyScreen = new GameMenuScreen(GraphicsDevice, _graphics);
+            //_mainMenyScreen.ScreenSize = (_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
+
             _pongGameScreen = new PongGameScreen(GraphicsDevice, _graphics);
 
             // Subscribe to event

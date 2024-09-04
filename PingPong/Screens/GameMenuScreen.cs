@@ -62,7 +62,7 @@ namespace PingPong.Screens
             {
                 var position = new Vector2(_random.Next(_screenWidth), _random.Next(_screenHeight));
                 var speed = (float)_random.NextDouble() * 50 + 50; // Random speed between 50 and 100
-                _snowflakes.Add(
+                GameEntities.Add(
                     new Snowflake(position, speed, _snowflakeTexture)
                     {
                         ParentSize = (_screenWidth, _screenHeight)
@@ -72,7 +72,6 @@ namespace PingPong.Screens
 
             // Create menu
             verticalMenu = new VerticalMenu(titleName, new List<string> { optionOne, optionTwo, optionThree, optionFour, optionFive }, contentManager.Load<SpriteFont>("MenuItem"), Color.White, Color.Yellow);
-            verticalMenu.Position = new Vector2(_screenWidth / 2 - 100, _screenHeight / 2 - 100);
             verticalMenu.Spacing = 50;
             verticalMenu.TitleSpriteFont = contentManager.Load<SpriteFont>("MenuTitleFont");
             verticalMenu.Initalize(_graphicsDevice,contentManager);
@@ -107,12 +106,7 @@ namespace PingPong.Screens
 
         public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
         {
-            // Draw snowflakes
-
-            foreach (var snowflake in _snowflakes)
-            {
-                snowflake.Draw(gameTime,spriteBatch);
-            }
+            
         }
     }
 }

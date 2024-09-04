@@ -9,9 +9,7 @@ namespace PingPong.Implementation.GameEntitiy
     public class Snowflake : GameEntity
     {
         private readonly Random _random;
-        public Vector2 Position { get; set; }
         public float Speed { get; set; }
-        public Texture2D Texture { get; set; }
 
         public (int Width, int Height) ParentSize { get; set; }
 
@@ -23,7 +21,7 @@ namespace PingPong.Implementation.GameEntitiy
             _random = new Random();
         }
 
-        public Task Update(GameTime gameTime)
+        public override void Update(GameTime gameTime)
         {
             float screenWidth = ParentSize.Width;
             float screenHeight = ParentSize.Height;
@@ -35,10 +33,8 @@ namespace PingPong.Implementation.GameEntitiy
             if (Position.Y > screenHeight || Position.X < 0)
             {
                 Position = new Vector2(screenWidth + _random.Next(0, (int)screenWidth), -_random.Next(0, (int)screenHeight));
-                Speed = (float)_random.NextDouble() * 50 + 50; // Assign a new random speed
+                Speed = (float)(_random.NextDouble() * 37.5 + 37.5); // Assign a new random speed that is 25% slower on average
             }
-
-            return Task.CompletedTask;
         }
 
 
