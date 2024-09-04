@@ -1,4 +1,4 @@
-﻿namespace PingPong.Screens;
+﻿namespace PingPong.Enum;
 
 public enum GameMode
 {

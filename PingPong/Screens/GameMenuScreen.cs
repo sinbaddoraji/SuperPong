@@ -1,112 +1,111 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using PingPong.Implementation.GameEntitiy;
+using PingPong.Implementation.GameEntity;
 using PingPong.Implementation.GameMenuScreen;
 using PingPong.Interface;
-using PingPong.Properties;
 using PingPong.SimpleSprite;
 
-namespace PingPong.Screens
+namespace PingPong.Screens;
+
+public class GameMenuScreen : IGameScreen
 {
-    public class GameMenuScreen : IGameScreen
+    private readonly int _screenWidth;
+    private readonly int _screenHeight;
+
+    private Random _random;
+    private Texture2D _snowflakeTexture;
+    private readonly GraphicsDevice _graphicsDevice;
+
+    private const string TitleName = "Super Pong";
+    private const string OptionOne = "Arcade Mode";
+    private const string OptionTwo = "Player vs Player";
+    private const string OptionThree = "Player vs Computer";
+    private const string OptionFour = "Comuter vs Computer";
+    private const string OptionFive = "Exit";
+
+    private VerticalMenu _verticalMenu;
+    private readonly GraphicsDeviceManager _graphics;
+
+    public GameMenuScreen(GraphicsDevice graphicsDevice, GraphicsDeviceManager graphics)
     {
-        private Game _game;
-        private GraphicsDeviceManager _graphics;
-        private int _screenWidth;
-        private int _screenHeight;
+        _graphicsDevice = graphicsDevice;
+        _graphics = graphics;
+        _screenWidth = graphics.PreferredBackBufferWidth;
+        _screenHeight = graphics.PreferredBackBufferHeight;
+    }
 
-        private List<Snowflake> _snowflakes;
-        private Random _random;
-        private Texture2D _snowflakeTexture;
-        private readonly GraphicsDevice _graphicsDevice;
+    public (int, int) ScreenSize { get; set; }
+    public List<IGameEntity> GameEntities { get; set; } = new();
 
-        string titleName = "Super Pong";
+    public delegate void MenuOptionSelectedHandler(int selectedOption);
+    public event MenuOptionSelectedHandler OnMenuOptionSelected;
 
-        private string optionOne = "Arcade Mode";
-        private string optionTwo = "Player vs Player";
-        private string optionThree = "Player vs Computer";
-        private string optionFour = "Comuter vs Computer";
-        private string optionFive = "Exit";
+    public void Initialize(ContentManager contentManager)
+    {
+        _random = new Random();
 
-        private VerticalMenu verticalMenu;
+        // Load snowflake texture
+        _snowflakeTexture = SnowFlakeTexture.CreateSnowflakeTexture(_graphicsDevice, 8, 8);
 
 
-        public GameMenuScreen(GraphicsDevice graphicsDevice, GraphicsDeviceManager graphics)
+        // Initialize snowflakes with random positions and speeds
+        for (int i = 0; i < 50; i++)
         {
-            _graphics = graphics;
-            _graphicsDevice = graphicsDevice;
-            _screenWidth = _graphics.PreferredBackBufferWidth;
-            _screenHeight = _graphics.PreferredBackBufferHeight;
-        }
-
-        public (int, int) ScreenSize { get; set; }
-        public List<IGameEntity> GameEntities { get; set; } = new List<IGameEntity>();
-
-        public void Initialize(ContentManager contentManager)
-        {
-            _random = new Random();
-            _snowflakes = new List<Snowflake>();
-
-            // Load snowflake texture
-            _snowflakeTexture = SnowFlakeTexture.CreateSnowflakeTexture(_graphicsDevice, 8, 8);
-
-
-            // Initialize snowflakes with random positions and speeds
-            for (int i = 0; i < 50; i++)
-            {
-                var position = new Vector2(_random.Next(_screenWidth), _random.Next(_screenHeight));
-                var speed = (float)_random.NextDouble() * 50 + 50; // Random speed between 50 and 100
-                GameEntities.Add(
-                    new Snowflake(position, speed, _snowflakeTexture)
-                    {
-                        ParentSize = (_screenWidth, _screenHeight)
-                    });
-            }
-
-
-            // Create menu
-            verticalMenu = new VerticalMenu(titleName, new List<string> { optionOne, optionTwo, optionThree, optionFour, optionFive }, contentManager.Load<SpriteFont>("MenuItem"), Color.White, Color.Yellow);
-            verticalMenu.Spacing = 50;
-            verticalMenu.TitleSpriteFont = contentManager.Load<SpriteFont>("MenuTitleFont");
-            verticalMenu.Initalize(_graphicsDevice,contentManager);
-
-            GameEntities.Add(verticalMenu);
-        }
-
-        public void DrawEntities(GameTime gameTime, SpriteBatch spriteBatch)
-        {
-            GameEntities.ForEach(entity => entity.Draw(gameTime, spriteBatch, Color.White));
-        }
-
-        public void UpdateEntities(GameTime gameTime)
-        {
-            GameEntities.ForEach(entity => entity.Update(gameTime));
-        }
-
-        
-        public void UnloadContent()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Vector2 Position { get; set; }
-        public Texture2D Texture { get; set; }
-
-        public Rectangle GetRectangle()
-        {
-            throw new NotImplementedException();
+            var position = new Vector2(_random.Next(_screenWidth), _random.Next(_screenHeight));
+            var speed = (float)_random.NextDouble() * 50 + 50; // Random speed between 50 and 100
+            GameEntities.Add(
+                new Snowflake(position, speed, _snowflakeTexture)
+                {
+                    ParentSize = (_screenWidth, _screenHeight)
+                });
         }
 
 
-        public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
+        // Create menu
+        _verticalMenu = new VerticalMenu(TitleName, 
+            new List<string> { OptionOne, OptionTwo, OptionThree, OptionFour, OptionFive }, 
+            contentManager.Load<SpriteFont>("MenuItem"), Color.White, Color.Yellow)
         {
-            
-        }
+            Spacing = 50,
+            TitleSpriteFont = contentManager.Load<SpriteFont>("MenuTitleFont")
+        };
+
+        _verticalMenu.OnMenuOptionSelected += selectedOption =>
+        {
+            // Invoke on menu option selected event
+            OnMenuOptionSelected?.Invoke(selectedOption);
+        };
+
+        _verticalMenu.Initialize(_graphicsDevice, _graphics, contentManager);
+
+        GameEntities.Add(_verticalMenu);
+    }
+
+    public void DrawEntities(GameTime gameTime, SpriteBatch spriteBatch)
+    {
+        GameEntities.ForEach(entity => entity.Draw(gameTime, spriteBatch, Color.White));
+    }
+
+    public void UpdateEntities(GameTime gameTime)
+    {
+        GameEntities.ForEach(entity => entity.Update(gameTime));
+    }
+
+    public void NavigateTo(string pageName)
+    {
+        // Do Not
+    }
+
+    public void OnNavigateTo(dynamic parameters)
+    {
+        // Do nothing
+    }
+
+    public void NavigateBackward()
+    {
+        // Do nothing
     }
 }

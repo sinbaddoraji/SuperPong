@@ -18,6 +18,10 @@ namespace PingPong.Interface
 
         void UpdateEntities(GameTime gameTime);
 
-        void UnloadContent();
+        void NavigateTo(string pageName);
+
+        void OnNavigateTo(dynamic parameters);
+
+        void NavigateBackward();
     }
 }

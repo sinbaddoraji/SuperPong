@@ -1,8 +1,8 @@
-﻿using System.IO;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using PingPong.Enum;
+using PingPong.Implementation.Navigation;
 using PingPong.Interface;
 using PingPong.Screens;
 
@@ -14,10 +14,9 @@ namespace PingPong
         public SpriteBatch _spriteBatch;
 
 
-        private IGameScreen _mainMenyScreen;
+        private IGameScreen _mainMenuScreen;
         private IGameScreen _pongGameScreen;
-
-        private GameState _currentGameState = GameState.MainMenu;
+        private INavigationManager _navigationManager;
 
         public PongGame()
         {
@@ -30,6 +29,8 @@ namespace PingPong
             _graphics.PreferredBackBufferWidth = 1200;
             _graphics.PreferredBackBufferHeight = 800;
             _graphics.ApplyChanges();
+
+            _navigationManager = new NavigationManager();
         }
 
         protected override void Initialize()
@@ -38,36 +39,22 @@ namespace PingPong
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // Initialize screens
-            _mainMenyScreen = new GameMenuScreen(GraphicsDevice, _graphics);
+            _mainMenuScreen = new GameMenuScreen(GraphicsDevice, _graphics);
             //_mainMenyScreen.ScreenSize = (_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
 
             _pongGameScreen = new PongGameScreen(GraphicsDevice, _graphics);
 
-            // Subscribe to event
-            //((GameMenuScreen)_mainMenyScreen).OnMenuOptionSelected += selectedOption =>
-            //{
-            //   // _currentGameState = GameState.Playing;
-            //   //_pongGameScreen.GameMode =  (GameMode)selectedOption;
+            _navigationManager.RegisterScreen(nameof(_mainMenuScreen), _mainMenuScreen);
+            _navigationManager.RegisterScreen(nameof(_pongGameScreen), _pongGameScreen);
 
-            //   //if ((GameMode)selectedOption == GameMode.PlayerToPlayer)
-            //   //{
-            //   //    _pongGameScreen.player1IsCPU = false;
-            //   //    _pongGameScreen.player2IsCPU = false;
-            //   //}
-            //   //else if ((GameMode)selectedOption == GameMode.PlayerToComputer)
-            //   //{
-            //   //    _pongGameScreen.player1IsCPU = true;
-            //   //    _pongGameScreen.player2IsCPU = false;
-            //   //}
-            //   //else if ((GameMode)selectedOption == GameMode.ComputerToComputer)
-            //   //{
-            //   //    _pongGameScreen.player1IsCPU = true;
-            //   //    _pongGameScreen.player2IsCPU = true;
-            //   //}
-            //};
+            // Subscribe to event
+            ((GameMenuScreen)_mainMenuScreen).OnMenuOptionSelected += selectedOption =>
+            {
+                _navigationManager.NavigateTo(nameof(_pongGameScreen), (GameMode)selectedOption);
+            };
 
             // Initialize screens
-            _mainMenyScreen.Initialize(Content);
+            _mainMenuScreen.Initialize(Content);
             _pongGameScreen.Initialize(Content);
         }
 
@@ -78,16 +65,8 @@ namespace PingPong
                 Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            switch (_currentGameState)
-            {
-                case GameState.MainMenu:
-                    _mainMenyScreen.UpdateEntities(gameTime);
-                    break;
-                case GameState.Playing:
-                    _pongGameScreen.UpdateEntities(gameTime);
-                    break;
-            }
-
+            _navigationManager.CurrentScreen.UpdateEntities(gameTime);
+            
             base.Update(gameTime);
         }
 
@@ -99,25 +78,7 @@ namespace PingPong
 
             _spriteBatch.Begin();
 
-            //if (_currentGameState == GameState.MainMenu)
-            //{
-            //    _mainMenyScreen.Draw(gameTime, _spriteBatch);
-            //}
-            //else if (_currentGameState == GameState.Playing)
-            //{
-            //    _pongGameScreen.Draw(gameTime, _spriteBatch);
-            //}
-
-            switch (_currentGameState)
-            {
-                case GameState.MainMenu:
-                    _mainMenyScreen.DrawEntities(gameTime, _spriteBatch);
-                    break;
-                case GameState.Playing:
-                    _pongGameScreen.DrawEntities(gameTime, _spriteBatch);
-                    break;
-            }
-
+            _navigationManager.CurrentScreen.DrawEntities(gameTime, _spriteBatch);
 
             _spriteBatch.End();
 

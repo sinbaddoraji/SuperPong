@@ -1,9 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
-using PingPong.Implementation.GameEntitiy;
 
 namespace PingPong.Implementation.GameMenuScreen;
 
-public class MenuItem : GameEntity
+public class MenuItem : GameEntity.GameEntity
 {
     public string Text { get; set; }
 

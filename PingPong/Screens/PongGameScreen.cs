@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using PingPong.Enum;
+using PingPong.Implementation.PongGame;
 using PingPong.Interface;
 using PingPong.SimpleSprite;
 
@@ -17,38 +18,38 @@ namespace PingPong.Screens
     internal class PongGameScreen : IGameScreen
     {
 
-        Texture2D ballTexture;
-        Vector2 ballPosition;
-        Vector2 ballVelocity;
+        Texture2D _ballTexture;
+        Vector2 _ballPosition;
+        Vector2 _ballVelocity;
 
-        Vector2 paddle1Position;
-        Vector2 paddle2Position;
+        Vector2 _paddle1Position;
+        Vector2 _paddle2Position;
 
-        float paddleSpeed = 800f;
-        float ballSpeedIncrease = 1.2f; // Increase in ball speed over time
+        float _paddleSpeed = 800f;
+        float _ballSpeedIncrease = 1.2f; // Increase in ball speed over time
 
         private Texture2D _paddleTexture2D;
 
-        public int screenWidth;
-        public int screenHeight;
+        public int ScreenWidth;
+        public int ScreenHeight;
 
-        Vector2 ballScale = new Vector2(1f, 1f); // Scaling factor for the ball
-        Vector2 paddleScale = new Vector2(1f, 1f); // Scaling factor for the paddles
+        Vector2 _ballScale = new Vector2(1f, 1f); // Scaling factor for the ball
+        Vector2 _paddleScale = new Vector2(1f, 1f); // Scaling factor for the paddles
 
         private GraphicsDeviceManager _graphics;
         private readonly SpriteBatch _spriteBatch;
 
-        private int ballDiameter = 20;
+        private int _ballDiameter = 20;
 
-        private float cpu1ReactionTimer = 0f;  // Timer for the reaction delay
-        private float cpu2ReactionTimer = 0.1f; // Time in seconds before CPU reacts
+        private float _cpu1ReactionTimer = 0f;  // Timer for the reaction delay
+        private float _cpu2ReactionTimer = 0.1f; // Time in seconds before CPU reacts
 
-        private float cpuReactionTime = 0.1f; // Time in seconds before CPU reacts
+        private float _cpuReactionTime = 0.1f; // Time in seconds before CPU reacts
        
-        private float cpuErrorMargin = 10f;   // Adds a margin of error to make the CPU less perfect
+        private float _cpuErrorMargin = 10f;   // Adds a margin of error to make the CPU less perfect
 
-        public bool player1IsCPU = false;
-        public bool player2IsCPU = false;
+        public bool Player1IsCpu = false;
+        public bool Player2IsCpu = false;
 
 
         public GameMode GameMode { get; set; }
@@ -62,34 +63,69 @@ namespace PingPong.Screens
 
         public void DrawEntities(GameTime gameTime, SpriteBatch spriteBatch)
         {
-            throw new NotImplementedException();
+            GameEntities.ForEach(entity => entity.Draw(gameTime, spriteBatch, Color.White));
         }
 
         public void UpdateEntities(GameTime gameTime)
         {
+            GameEntities.ForEach(entity => entity.Update(gameTime));
+        }
+
+        public void NavigateTo(string pageName)
+        {
             throw new NotImplementedException();
         }
 
-        void IGameScreen.UnloadContent()
+        public void OnNavigateTo(dynamic parameters)
+        {
+            var parms = (GameMode)parameters;
+
+            if (parms == GameMode.PlayerToPlayer)
+            {
+                Player1IsCpu = false;
+                Player2IsCpu = false;
+            }
+            else if (parms == GameMode.PlayerToComputer)
+            {
+                Player1IsCpu = true;
+                Player2IsCpu = false;
+            }
+            else if (parms == GameMode.ComputerToComputer)
+            {
+                Player1IsCpu = true;
+                Player2IsCpu = true;
+            }
+
+        }
+
+        public void NavigateBackward()
         {
             throw new NotImplementedException();
         }
 
         public async Task Initialize(ContentManager contentManager)
         {
-            screenWidth = _graphics.PreferredBackBufferWidth;
-            screenHeight = _graphics.PreferredBackBufferHeight;
+           
 
             InitializeGame();
         }
 
         public PongGameScreen(GraphicsDevice graphicsDevice, GraphicsDeviceManager graphics)
         {
-            ballTexture = BallTexture.CreateBallTexture(graphicsDevice, ballDiameter);
+            _ballTexture = BallTexture.CreateBallTexture(graphicsDevice, _ballDiameter);
             _paddleTexture2D = PaddleTexture.CreatePaddleTexture(graphicsDevice, 300, 20);
 
 
             _graphics = graphics;
+
+            ScreenWidth = _graphics.PreferredBackBufferWidth;
+            ScreenHeight = _graphics.PreferredBackBufferHeight;
+
+            PongArena pongArena = new PongArena(graphicsDevice, ScreenWidth - 100, ScreenHeight - 100);
+            // Align the arena to the center of the screen
+            pongArena.Position = new Vector2(ScreenWidth / 2 - pongArena.Texture.Width / 2, ScreenHeight / 2 - pongArena.Texture.Height / 2);
+
+            GameEntities = new List<IGameEntity> { pongArena };
 
             InitializeGame();
         }
@@ -97,11 +133,13 @@ namespace PingPong.Screens
         private void InitializeGame()
         {
             // Initial positions
-            ballPosition = new Vector2(screenWidth / 2, screenHeight / 2);
-            ballVelocity = new Vector2(150, 150); // Set the ball's initial velocity
+            _ballPosition = new Vector2(ScreenWidth / 2, ScreenHeight / 2);
+            _ballVelocity = new Vector2(150, 150); // Set the ball's initial velocity
 
-            paddle1Position = new Vector2(screenWidth / 2 - _paddleTexture2D.Width * paddleScale.X / 2, 50); // Top of the screen
-            paddle2Position = new Vector2(screenWidth / 2 - _paddleTexture2D.Width * paddleScale.X / 2, screenHeight - 70); // Bottom of the screen
+            _paddle1Position = new Vector2(ScreenWidth / 2 - _paddleTexture2D.Width * _paddleScale.X / 2, 50); // Top of the screen
+            _paddle2Position = new Vector2(ScreenWidth / 2 - _paddleTexture2D.Width * _paddleScale.X / 2, ScreenHeight - 70); // Bottom of the screen
+
+            
         }
 
 
@@ -127,118 +165,118 @@ namespace PingPong.Screens
             var kstate = Keyboard.GetState();
 
             // Player 1 controls (A and D keys for left and right movement)
-            if (player1IsCPU)
+            if (Player1IsCpu)
             {
                 
-                HandleComputerLogic(ref paddle1Position, ref cpu1ReactionTimer, gameTime);
+                HandleComputerLogic(ref _paddle1Position, ref _cpu1ReactionTimer, gameTime);
             }
             else
             {
                 if (kstate.IsKeyDown(Keys.A))
                 {
-                    paddle1Position.X -= paddleSpeed * deltaTime;
+                    _paddle1Position.X -= _paddleSpeed * deltaTime;
                 }
 
                 if (kstate.IsKeyDown(Keys.D))
                 {
-                    paddle1Position.X += paddleSpeed * deltaTime;
+                    _paddle1Position.X += _paddleSpeed * deltaTime;
                 }
             }
 
             // Player 2 controls (Left and Right keys for left and right movement)
-            if (player2IsCPU)
+            if (Player2IsCpu)
             {
-                HandleComputerLogic(ref paddle2Position, ref cpu2ReactionTimer, gameTime);
+                HandleComputerLogic(ref _paddle2Position, ref _cpu2ReactionTimer, gameTime);
             }
             else
             {
                 if (kstate.IsKeyDown(Keys.Left))
                 {
-                    paddle2Position.X -= paddleSpeed * deltaTime;
+                    _paddle2Position.X -= _paddleSpeed * deltaTime;
                 }
                 if (kstate.IsKeyDown(Keys.Right))
                 {
-                    paddle2Position.X += paddleSpeed * deltaTime;
+                    _paddle2Position.X += _paddleSpeed * deltaTime;
                 }
             }
 
 
 
             // Ensure paddles stay within screen bounds
-            paddle1Position.X = MathHelper.Clamp(paddle1Position.X, 0, screenWidth - _paddleTexture2D.Width * paddleScale.X);
-            paddle2Position.X = MathHelper.Clamp(paddle2Position.X, 0, screenWidth - _paddleTexture2D.Width * paddleScale.X);
+            _paddle1Position.X = MathHelper.Clamp(_paddle1Position.X, 0, ScreenWidth - _paddleTexture2D.Width * _paddleScale.X);
+            _paddle2Position.X = MathHelper.Clamp(_paddle2Position.X, 0, ScreenWidth - _paddleTexture2D.Width * _paddleScale.X);
 
             // Ball movement logic
-            ballPosition += ballVelocity * deltaTime;
+            _ballPosition += _ballVelocity * deltaTime;
 
             // Ball collision with left and right of the screen
-            if (ballPosition.X <= 0 || ballPosition.X >= screenWidth - ballTexture.Width * ballScale.X)
+            if (_ballPosition.X <= 0 || _ballPosition.X >= ScreenWidth - _ballTexture.Width * _ballScale.X)
             {
-                ballVelocity.X *= -1; // Reverse X velocity
+                _ballVelocity.X *= -1; // Reverse X velocity
             }
 
             // Ball collision with paddles
-            if (ballPosition.Y <= paddle1Position.Y + _paddleTexture2D.Height * paddleScale.Y &&
-                ballPosition.X + ballTexture.Width * ballScale.X >= paddle1Position.X &&
-                ballPosition.X <= paddle1Position.X + _paddleTexture2D.Width * paddleScale.X)
+            if (_ballPosition.Y <= _paddle1Position.Y + _paddleTexture2D.Height * _paddleScale.Y &&
+                _ballPosition.X + _ballTexture.Width * _ballScale.X >= _paddle1Position.X &&
+                _ballPosition.X <= _paddle1Position.X + _paddleTexture2D.Width * _paddleScale.X)
             {
-                ballVelocity.Y *= -1; // Reverse Y velocity
-                ballPosition.Y = paddle1Position.Y + _paddleTexture2D.Height * paddleScale.Y; // Ensure ball doesn't get stuck
-                ballVelocity *= 1 + ballSpeedIncrease * deltaTime; // Speed up the ball
+                _ballVelocity.Y *= -1; // Reverse Y velocity
+                _ballPosition.Y = _paddle1Position.Y + _paddleTexture2D.Height * _paddleScale.Y; // Ensure ball doesn't get stuck
+                _ballVelocity *= 1 + _ballSpeedIncrease * deltaTime; // Speed up the ball
             }
 
-            if (ballPosition.Y + ballTexture.Height * ballScale.Y >= paddle2Position.Y &&
-                ballPosition.X + ballTexture.Width * ballScale.X >= paddle2Position.X &&
-                ballPosition.X <= paddle2Position.X + _paddleTexture2D.Width * paddleScale.X)
+            if (_ballPosition.Y + _ballTexture.Height * _ballScale.Y >= _paddle2Position.Y &&
+                _ballPosition.X + _ballTexture.Width * _ballScale.X >= _paddle2Position.X &&
+                _ballPosition.X <= _paddle2Position.X + _paddleTexture2D.Width * _paddleScale.X)
             {
-                ballVelocity.Y *= -1; // Reverse Y velocity
-                ballPosition.Y = paddle2Position.Y - ballTexture.Height * ballScale.Y; // Ensure ball doesn't get stuck
-                ballVelocity *= 1 + ballSpeedIncrease * deltaTime; // Speed up the ball
+                _ballVelocity.Y *= -1; // Reverse Y velocity
+                _ballPosition.Y = _paddle2Position.Y - _ballTexture.Height * _ballScale.Y; // Ensure ball doesn't get stuck
+                _ballVelocity *= 1 + _ballSpeedIncrease * deltaTime; // Speed up the ball
             }
 
             // Ball reset if it goes out of bounds (top or bottom)
-            if (ballPosition.Y < 0 || ballPosition.Y > screenHeight)
+            if (_ballPosition.Y < 0 || _ballPosition.Y > ScreenHeight)
             {
                 InitializeGame();
             }
 
             // Update paddle speed based on the ball's speed
-            paddleSpeed = ballVelocity.Length() * 2.5f;
-            ComputerPaddleSpeed = paddleSpeed * 2.5f;
+            _paddleSpeed = _ballVelocity.Length() * 2.5f;
+            _computerPaddleSpeed = _paddleSpeed * 2.5f;
 
         }
 
-        private float ComputerPaddleSpeed = 1000;
+        private float _computerPaddleSpeed = 1000;
        
         private void HandleComputerLogic(ref Vector2 p0, ref float cpuReactionTimer, GameTime gameTime)
         {
             cpuReactionTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            if (cpuReactionTimer >= cpuReactionTime)
+            if (cpuReactionTimer >= _cpuReactionTime)
             {
                 cpuReactionTimer = 0f;
 
                 // Calculate the ball's position when it reaches the CPU's paddle
-                float t = (p0.Y - ballPosition.Y) / ballVelocity.Y;
-                float x = ballPosition.X + ballVelocity.X * t;
+                float t = (p0.Y - _ballPosition.Y) / _ballVelocity.Y;
+                float x = _ballPosition.X + _ballVelocity.X * t;
 
                 // Move the CPU's paddle towards the ball's position
-                if (x < p0.X + cpuErrorMargin)
+                if (x < p0.X + _cpuErrorMargin)
                 {
-                    p0.X -= ComputerPaddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    p0.X -= _computerPaddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 }
-                else if (x > p0.X + _paddleTexture2D.Width * paddleScale.X - cpuErrorMargin)
+                else if (x > p0.X + _paddleTexture2D.Width * _paddleScale.X - _cpuErrorMargin)
                 {
-                    p0.X += ComputerPaddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    p0.X += _computerPaddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 }
             }
         }
 
         public async Task Draw(GameTime gameTime, SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(ballTexture, ballPosition, null, Color.White, 0f, Vector2.Zero, ballScale, SpriteEffects.None, 0f);
-            spriteBatch.Draw(_paddleTexture2D, paddle1Position, null, Color.White, 0f, Vector2.Zero, paddleScale, SpriteEffects.None, 0f);
-            spriteBatch.Draw(_paddleTexture2D, paddle2Position, null, Color.White, 0f, Vector2.Zero, paddleScale, SpriteEffects.None, 0f);
+            spriteBatch.Draw(_ballTexture, _ballPosition, null, Color.White, 0f, Vector2.Zero, _ballScale, SpriteEffects.None, 0f);
+            spriteBatch.Draw(_paddleTexture2D, _paddle1Position, null, Color.White, 0f, Vector2.Zero, _paddleScale, SpriteEffects.None, 0f);
+            spriteBatch.Draw(_paddleTexture2D, _paddle2Position, null, Color.White, 0f, Vector2.Zero, _paddleScale, SpriteEffects.None, 0f);
         }
 
         public async Task UnloadContent()
