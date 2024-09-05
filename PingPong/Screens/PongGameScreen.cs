@@ -77,6 +77,11 @@ namespace PingPong.Screens
                 ball.IsVisible = false;
             }
 
+            if (GameState == GameState.Player2WaitingToServe)
+            {
+
+            }
+
             GameEntities.ForEach(entity => entity.Update(gameTime));
 
 
@@ -136,7 +141,13 @@ namespace PingPong.Screens
             _paddleBallLaunchAimer = new PaddleBallLaunchAimer(graphicsDevice, Color.Green, 50, 30);
             _paddleBallLaunchAimer.IsActive = false;
             _paddleBallLaunchAimer.IsVisible = false;
-            
+
+            _paddleBallLaunchAimer.OnBallLaunch += PaddleBallLaunchAimerOnOnBallLaunch;
+
+            void PaddleBallLaunchAimerOnOnBallLaunch(Vector2 launchdirection)
+            {
+                GameState = GameState.Player2WaitingToServe;
+            }
 
 
             _graphics = graphics;
@@ -162,11 +173,7 @@ namespace PingPong.Screens
           
             player2Paddle.Position = new Vector2(ScreenWidth / 2 - player2Paddle.Texture.Width / 2, 70);
 
-            if (isPlayer1sTurn)
-            {
-                // Draw line above ball
-                _paddleBallLaunchAimer.Position = new Vector2(ScreenWidth / 2 - _paddleBallLaunchAimer.Texture.Width / 2, ScreenHeight - 100 - _paddleBallLaunchAimer.Texture.Height);
-            }
+            SetAimerPositions();
 
             // if player 1's turn, draw ball just above player 1's paddle
             ball.Position = isPlayer1sTurn ? 
@@ -180,6 +187,19 @@ namespace PingPong.Screens
             };
 
             InitializeGame();
+        }
+
+        private void SetAimerPositions()
+        {
+            if (isPlayer1sTurn)
+            {
+                
+                // Draw line above ball
+                var paddleLocation = player1Paddle.GetRectangle();
+
+                var paddle1Width = player1Paddle.Width;
+                _paddleBallLaunchAimer.Position = new Vector2(paddleLocation.X + (paddle1Width/2), paddleLocation.Y);
+            }
         }
 
         private void InitializeGame()

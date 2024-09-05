@@ -11,8 +11,14 @@ namespace PingPong.Implementation.PongGame
 {
     internal class Paddle : PongGameEntity
     {
+        public int Width { get; }
+        public int Height { get; }
+
         public Paddle(GraphicsDevice graphics, Color color, int width, int height)
         {
+            Width = width;
+            Height = height;
+
             // Create paddle texture
             Texture = PaddleTexture.CreatePaddleTexture(graphics, color, width, height);
         }

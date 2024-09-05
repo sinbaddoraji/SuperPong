@@ -12,12 +12,19 @@ public class PaddleBallLaunchAimer : PongGameEntity
     private float _timeSinceLastInput;
     private readonly GraphicsDevice _graphics;
     private readonly Color _color;
-    private readonly int _length;
+    private int _length;
     private int _angle;
     private bool _isPointingUpwards = false;
 
     private int effectiveMinAngle = 0;
     private int effectiveMaxAngle = 0;
+
+    private int _maxHeight = 100;
+    private int _minHeight = 50;
+
+    // Release the ball event
+    public delegate void BallLaunchHandler(Vector2 launchDirection);
+    public event BallLaunchHandler OnBallLaunch;
 
     public PaddleBallLaunchAimer(GraphicsDevice graphics, Color color, int length, int angle,bool isPointingUpwards = true)
     {
@@ -30,16 +37,20 @@ public class PaddleBallLaunchAimer : PongGameEntity
 
         if (_isPointingUpwards)
         {
-            _angle = 180;
-            effectiveMinAngle = 135;
-            effectiveMaxAngle = 225;
+             _angle = 180;
+            effectiveMinAngle = 115;
+            effectiveMaxAngle = 245;
 
-            Position = new Vector2(Position.X, Position.Y + 500);
+            // TODO: Comment the below out
+            //effectiveMinAngle = int.MinValue;
+            //effectiveMaxAngle = int.MaxValue;
         }
         else
         {
             
         }
+
+        length = 200;
         Texture = LineTexture.CreateLineTexture(_graphics, _color, length);
     }
 
@@ -88,9 +99,29 @@ public class PaddleBallLaunchAimer : PongGameEntity
         _angle += 1;
     }
 
+    private void ExtendAimLine()
+    {
+        if(_length < _maxHeight)
+             _length++;
+        Redraw();
+    }
+
+    private void ReduceAimLine()
+    {
+        if (_length > _minHeight)
+            _length--;
+
+        Redraw();
+    }
+
+    private void Redraw()
+    {
+        Texture = LineTexture.CreateLineTexture(_graphics, _color, _length);
+    }
+
     public void LaunchBall()
     {
-
+        OnBallLaunch.Invoke(new Vector2(0,0));
     }
 
     public override void Draw(GameTime gameTime, SpriteBatch spriteBatch, Color color)
@@ -111,6 +142,9 @@ public class PaddleBallLaunchAimer : PongGameEntity
 
         if (IsActive)
         {
+            HandleInput(Keys.Up, gamePadState.DPad.Up, 0.0f, ExtendAimLine);
+            HandleInput(Keys.Down, gamePadState.DPad.Down, 0.0f, ReduceAimLine);
+
             HandleInput(Keys.Left, gamePadState.DPad.Down, gamePadState.ThumbSticks.Left.Y < -0.5 ? -1 : 0, AimLeft);
             HandleInput(Keys.Right, gamePadState.DPad.Up, gamePadState.ThumbSticks.Left.Y > 0.5 ? 1 : 0, AimRight);
             HandleInput(Keys.Enter, gamePadState.Buttons.A, gamePadState.Triggers.Right, LaunchBall, 0.5f);
