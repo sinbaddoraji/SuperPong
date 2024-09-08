@@ -2,11 +2,11 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace PingPong.Screens;
+namespace PingPong.SimpleSprite;
 
 internal class BallTexture
 {
-    public static Texture2D CreateBallTexture(GraphicsDevice graphicsDevice, int diameter)
+    public static Texture2D CreateBallTexture(GraphicsDevice graphicsDevice, Color color, int diameter)
     {
         // Create ball texture
         Texture2D texture = new Texture2D(graphicsDevice, diameter, diameter);
@@ -21,7 +21,7 @@ internal class BallTexture
                 // Create a simple circle-shaped ball
                 if (Math.Pow(x - diameter / 2, 2) + Math.Pow(y - diameter / 2, 2) <= Math.Pow(diameter / 2, 2))
                 {
-                    data[y * diameter + x] = Color.White;
+                    data[y * diameter + x] = color;
                 }
                 else
                 {

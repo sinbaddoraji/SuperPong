@@ -1,9 +1,10 @@
-﻿namespace PingPong.Screens;
+﻿namespace PingPong.Enum;
 
 public enum GameMode
 {
     Arcade,
     PlayerToPlayer,
     PlayerToComputer,
-    ComputerToComputer
+    ComputerToComputer,
+    Exit
 }
