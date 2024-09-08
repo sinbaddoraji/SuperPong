@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using nkast.Aether.Physics2D.Dynamics;
+using PingPong.Helpers;
 using PingPong.SimpleSprite;
 
 namespace PingPong.Implementation.PongGame
@@ -15,8 +13,9 @@ namespace PingPong.Implementation.PongGame
         public int Height { get; }
 
         private GraphicsDevice _graphics;
+        private float _computerPaddleSpeed = 1000f; // AI paddle speed
 
-        public Paddle(GraphicsDevice graphics, Color color, int width, int height)
+        public Paddle(GraphicsDevice graphics, ref World world, Color color, int width, int height) : base(ref world)
         {
             Width = width;
             Height = height;
@@ -27,35 +26,48 @@ namespace PingPong.Implementation.PongGame
             Texture = PaddleTexture.CreatePaddleTexture(graphics, color, width, height);
         }
 
+        // Changes the paddle's color by regenerating the texture
         public void ChangeColor(Color color)
         {
             Texture = PaddleTexture.CreatePaddleTexture(_graphics, color, Width, Height);
         }
 
-        private float _computerPaddleSpeed = 1000;
+        // Initialize the paddle's physics body
+        public override void InitializePhysics(Vector2 initialPosition)
+        {
+            // Create a rectangle physics body for the paddle
+            _physicsBody = _world.CreateRectangle(ConvertUnits.ToSimUnits(Width), ConvertUnits.ToSimUnits(Height), 1f);
+            _physicsBody.BodyType = BodyType.Kinematic; // Paddles are kinematic as they are controlled directly
+            // _physicsBody.Friction = 0f; // No friction for smooth movement
+            _physicsBody.Position = ConvertUnits.ToSimUnits(initialPosition);
+        }
 
-        //private void HandleComputerLogic(ref Vector2 p0, ref float cpuReactionTimer, GameTime gameTime)
-        //{
-        //    cpuReactionTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+        // Method to move the paddle for player or AI
+        public void Move(Vector2 newPosition)
+        {
+            // Set the paddle's position directly for controlled movement
+            _physicsBody.Position = ConvertUnits.ToSimUnits(newPosition);
+        }
 
-        //    if (cpuReactionTimer >= _cpuReactionTime)
-        //    {
-        //        cpuReactionTimer = 0f;
+        // AI Paddle movement logic
+        public void UpdateAI(GameTime gameTime, Vector2 ballPosition)
+        {
+            // Simple AI: Move paddle towards the ball's X position
+            float targetX = ballPosition.X - Width / 2; // Center paddle on ball's X
+            float paddleSpeed = _computerPaddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-        //        // Calculate the ball's position when it reaches the CPU's paddle
-        //        float t = (p0.Y - _ballPosition.Y) / _ballVelocity.Y;
-        //        float x = _ballPosition.X + _ballVelocity.X * t;
+            // Move paddle towards the target position with some speed limit
+            Vector2 newPosition = new Vector2(MathHelper.Lerp(Position.X, targetX, paddleSpeed), Position.Y);
 
-        //        // Move the CPU's paddle towards the ball's position
-        //        if (x < p0.X + _cpuErrorMargin)
-        //        {
-        //            p0.X -= _computerPaddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-        //        }
-        //        else if (x > p0.X + _paddleTexture2D.Width * _paddleScale.X - _cpuErrorMargin)
-        //        {
-        //            p0.X += _computerPaddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-        //        }
-        //    }
-        //}
+            // Set the new position (this automatically updates the physics body)
+            Move(newPosition);
+        }
+
+        // Update the paddle position based on the physics body
+        public new void Update(GameTime gameTime)
+        {
+            // Sync the display position with the physics body
+            Position = ConvertUnits.ToDisplayUnits(_physicsBody.Position);
+        }
     }
 }

@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using nkast.Aether.Physics2D.Dynamics;
 using PingPong.Enum;
+using PingPong.Helpers;
 using PingPong.Implementation.Controller;
 using PingPong.Implementation.GameEntity;
 using PingPong.Implementation.PongGame;
@@ -82,13 +83,14 @@ namespace PingPong.Screens
         {
             //_ballTexture = BallTexture.CreateBallTexture(graphicsDevice, _ballDiameter);
             //_paddleTexture2D = PaddleTexture.CreatePaddleTexture(graphicsDevice, 300, 20);
+            _world = new World();
 
-            player1Paddle = new Paddle(graphicsDevice, Player1Color, 200, 30);
-            player2Paddle = new Paddle(graphicsDevice, Player2Color, 200, 30);
-            ball = new Ball(graphicsDevice, Color.White, 30);
+            player1Paddle = new Paddle(graphicsDevice, ref _world, Player1Color, 200, 30);
+            player2Paddle = new Paddle(graphicsDevice, ref _world, Player2Color, 200, 30);
+            ball = new Ball(graphicsDevice, ref _world, Color.White, 30);
 
-            _paddleBallLaunchAimer = new PaddleBallLaunchAimer(graphicsDevice, GameScreenControllerManager, Player1Color, 50, 30, true);
-            _paddleBallLaunchAimer2 = new PaddleBallLaunchAimer(graphicsDevice, GameScreenControllerManager, Player2Color, 50, 30, false);
+            _paddleBallLaunchAimer = new PaddleBallLaunchAimer(graphicsDevice, ref _world, GameScreenControllerManager, Player1Color, 50, 30, true);
+            _paddleBallLaunchAimer2 = new PaddleBallLaunchAimer(graphicsDevice, ref _world, GameScreenControllerManager, Player2Color, 50, 30, false);
 
             player1ScoreText = new GameEntity();
 
@@ -102,7 +104,7 @@ namespace PingPong.Screens
             void PaddleBallLaunchAimerOnOnBallLaunch(Vector2 launchdirection)
             {
                 ball.IsVisible = true;
-                 ball.Velocity = launchdirection;
+                 // ball.Velocity = launchdirection;
                 _paddleBallLaunchAimer.IsActive = false;
                 _paddleBallLaunchAimer.IsVisible = false;
             }
@@ -146,6 +148,9 @@ namespace PingPong.Screens
             };
 
             InitializeGame();
+
+            _world = new World();
+            
         }
 
 
@@ -175,6 +180,17 @@ namespace PingPong.Screens
 
         public void UpdateEntities(GameTime gameTime)
         {
+            // Step the physics world (progress the physics simulation)
+            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            _world.Step(deltaTime);
+
+            
+
+            // Update game entities (their position in pixels based on physics world)
+            ball.Update(gameTime);
+            player1Paddle.Update(gameTime);
+            player2Paddle.Update(gameTime);
+
             GameScreenControllerManager.Update(gameTime);
 
             if (GameState == GameState.Player1WaitingToServe)
@@ -271,16 +287,35 @@ namespace PingPong.Screens
             //_paddle2Position = new Vector2(ScreenWidth / 2 - _paddleTexture2D.Width * _paddleScale.X / 2, ScreenHeight - 70); // Bottom of the screen
 
             
-            _world = new World();
             
+            InitializePhysicsEntities();
+
+
         }
 
-        public async Task Draw(GameTime gameTime, SpriteBatch spriteBatch)
+        private void InitializePhysicsEntities()
         {
-            // spriteBatch.Draw(_ballTexture, _ballPosition, null, Color.White, 0f, Vector2.Zero, _ballScale, SpriteEffects.None, 0f);
-            // spriteBatch.Draw(_paddleTexture2D, _paddle1Position, null, Color.White, 0f, Vector2.Zero, _paddleScale, SpriteEffects.None, 0f);
-            // spriteBatch.Draw(_paddleTexture2D, _paddle2Position, null, Color.White, 0f, Vector2.Zero, _paddleScale, SpriteEffects.None, 0f);
+            // Create physical body for the ball
+            ball.InitializePhysics(new Vector2(ScreenWidth / 2, ScreenHeight / 2));
+
+            // Initialize paddles' physics bodies
+            player1Paddle.InitializePhysics(new Vector2(ScreenWidth / 2, ScreenHeight - 100));
+            player2Paddle.InitializePhysics(new Vector2(ScreenWidth / 2, 70));
+
+            // Create static bodies for arena walls
+            CreateWall(new Vector2(ScreenWidth / 2, ArenaRectangle.Top), new Vector2(ScreenWidth, 10)); // Top wall
+            CreateWall(new Vector2(ScreenWidth / 2, ArenaRectangle.Bottom), new Vector2(ScreenWidth, 10)); // Bottom wall
+            CreateWall(new Vector2(ArenaRectangle.Left, ScreenHeight / 2), new Vector2(10, ScreenHeight)); // Left wall
+            CreateWall(new Vector2(ArenaRectangle.Right, ScreenHeight / 2), new Vector2(10, ScreenHeight)); // Right wall
         }
+
+        private void CreateWall(Vector2 position, Vector2 size)
+        {
+            var wallBody = _world.CreateRectangle(size.X, size.Y, 1f);
+            wallBody.BodyType = BodyType.Static; // Walls don't move
+            wallBody.Position = ConvertUnits.ToSimUnits(position); // Position in simulation units
+        }
+
 
     }
 }

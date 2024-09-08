@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using nkast.Aether.Physics2D.Dynamics;
 using PingPong.Enum;
 using PingPong.Implementation.Controller;
 using PingPong.Implementation.GameEntity;
@@ -86,8 +87,9 @@ namespace PingPong.Screens
             player2Panel.Position = new Vector2(ScreenSize.Item1 / 2, 0);
             player2Panel.Texture = SimpleSprite.PaddleTexture.CreatePaddleTexture(graphicsDevice, Color.White, ScreenSize.Item1 / 2, ScreenSize.Item2);
 
-            player1PaddlePreview = new Paddle(graphicsDevice, colors[player1ColorIndex], 200, 30);
-            player2PaddlePreview = new Paddle(graphicsDevice, colors[player2ColorIndex], 200, 30);
+            World abstratWorld = new World();
+            player1PaddlePreview = new Paddle(graphicsDevice, ref abstratWorld, colors[player1ColorIndex], 200, 30);
+            player2PaddlePreview = new Paddle(graphicsDevice, ref abstratWorld, colors[player2ColorIndex], 200, 30);
 
             // Draw the paddles to the middle of the panels
             player1PaddlePreview.Position = new Vector2(player1Panel.Position.X + player1Panel.Texture.Width / 2 - player1PaddlePreview.Texture.Width / 2,

@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using PingPong.Interface;
 using PingPong.SimpleSprite;
 using System;
+using nkast.Aether.Physics2D.Dynamics;
 
 namespace PingPong.Implementation.PongGame;
 
@@ -27,7 +28,7 @@ public class PaddleBallLaunchAimer : PongGameEntity
 
     IGameScreenControllerManager _gameScreenControllerManager;
 
-    public PaddleBallLaunchAimer(GraphicsDevice graphics, IGameScreenControllerManager gameScreenControllerManager, Color color, int length, int angle,bool isPointingUpwards = true)
+    public PaddleBallLaunchAimer(GraphicsDevice graphics, ref World world, IGameScreenControllerManager gameScreenControllerManager, Color color, int length, int angle,bool isPointingUpwards = true) : base(ref world)
     {
         _graphics = graphics;
         _color = color;
@@ -138,7 +139,12 @@ public class PaddleBallLaunchAimer : PongGameEntity
         spriteBatch.Draw(Texture, Position, null, color, MathHelper.ToRadians(_angle), new Vector2(0, 0), 1.0f, SpriteEffects.None, 0);
     }
 
-    public override void Update(GameTime gameTime)
+    public override void InitializePhysics(Vector2 initialPosition)
+    {
+        // throw new NotImplementedException();
+    }
+
+    public new void Update(GameTime gameTime)
     {
         if(!IsActive)
             return;
