@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
+using PingPong.Interface;
 using PingPong.Properties;
 using Color = Microsoft.Xna.Framework.Color;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
@@ -13,6 +12,11 @@ namespace PingPong.Implementation.GameMenuScreen
 {
     public class VerticalMenu : GameEntity.GameEntity
     {
+        public delegate void MenuOptionSelectedHandler(int selectedOption);
+        public event MenuOptionSelectedHandler OnMenuOptionSelected;
+
+        private List<string> MenuOptions { get; }
+
         public List<MenuItem> Items { get; set; }
 
         public float Spacing { get; set; } = 50;
@@ -23,20 +27,15 @@ namespace PingPong.Implementation.GameMenuScreen
 
         public SpriteFont TitleSpriteFont { get; set; }
 
+        private readonly string _title;
+
         private Texture2D _menuSelectionTexture;
         private Texture2D _menuSelection2Texture;
-        private readonly string _title;
+        
         private SpriteFont _menuTitleFont;
         private SpriteFont _menuItemFont;
 
         private GameEntity.GameEntity MenuTitle { get; set; }
-
-        private readonly float _inputCooldown = 0.2f; // 200ms cooldown for input
-        private float _timeSinceLastInput;
-
-        public delegate void MenuOptionSelectedHandler(int selectedOption);
-        public event MenuOptionSelectedHandler OnMenuOptionSelected;
-
 
         private Color DefaultMenuColor { get; }
         private Color SelectedMenuColor { get; }
@@ -45,9 +44,11 @@ namespace PingPong.Implementation.GameMenuScreen
 
         private const int StartingMenuPosition = 80;
 
-        private List<string> MenuOptions { get; }
+        
 
-        public VerticalMenu(string title, List<string> menuOptions, SpriteFont spriteFont, Color color, Color selectColor)
+        private readonly IGameScreenControllerManager _gameScreenControllerManager;
+
+        public VerticalMenu(string title, List<string> menuOptions, SpriteFont spriteFont, Color color, Color selectColor, IGameScreenControllerManager gameScreenControllerManager)
         {
             _title = title;
             Items = new List<MenuItem>();
@@ -58,6 +59,7 @@ namespace PingPong.Implementation.GameMenuScreen
             SelectedMenuColor = selectColor;
 
             MenuOptions = menuOptions;
+            _gameScreenControllerManager = gameScreenControllerManager;
         }
 
         public void Initialize(GraphicsDevice graphicsDevice, GraphicsDeviceManager graphics, ContentManager contentManager)
@@ -131,27 +133,6 @@ namespace PingPong.Implementation.GameMenuScreen
             OnMenuOptionSelected?.Invoke(SelectedIndex);
         }
 
-
-        private void HandleInput(Keys key, ButtonState buttonState, float thumbstickDirection, Action moveAction, float threshold = 0.5f)
-        {
-            var keyboardState = Keyboard.GetState();
-
-            if ((_timeSinceLastInput <= 0) &&
-                (keyboardState.IsKeyDown(key) || buttonState == ButtonState.Pressed || Math.Abs(thumbstickDirection) > threshold))
-            {
-                moveAction();
-                _timeSinceLastInput = _inputCooldown;
-            }
-
-            // Check select option
-            if ((_timeSinceLastInput <= 0) &&
-                (keyboardState.IsKeyDown(key) || buttonState == ButtonState.Pressed || Math.Abs(thumbstickDirection) > threshold))
-            {
-                SelectOption();
-                _timeSinceLastInput = _inputCooldown;
-            }
-        }
-
         public override void Update(GameTime gameTime)
         {
             foreach (var item in Items)
@@ -159,19 +140,15 @@ namespace PingPong.Implementation.GameMenuScreen
                 item.Update(gameTime);
             }
 
-            
-            var gamePadState = GamePad.GetState(PlayerIndex.One);
+            if(_gameScreenControllerManager.AnyPlayerKeyDown())
+                MoveDown();
 
-            if (_timeSinceLastInput > 0)
-            {
-                _timeSinceLastInput -= (float)gameTime.ElapsedGameTime.TotalSeconds;
-            }
+            if(_gameScreenControllerManager.AnyPlayerKeyUp())
+                MoveUp();
 
-            HandleInput(Keys.Down, gamePadState.DPad.Down, gamePadState.ThumbSticks.Left.Y < -0.5 ? -1 : 0, MoveDown);
-            HandleInput(Keys.Up, gamePadState.DPad.Up, gamePadState.ThumbSticks.Left.Y > 0.5 ? 1 : 0, MoveUp);
-            HandleInput(Keys.Enter, gamePadState.Buttons.A, gamePadState.Triggers.Right, SelectOption, 0.5f);
+            if(_gameScreenControllerManager.AnyPlayerKeyAction())
+                SelectOption();
         }
-
 
         public override void Draw(GameTime gameTime, SpriteBatch spriteBatch, Color color)
         {

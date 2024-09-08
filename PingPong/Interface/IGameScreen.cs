@@ -12,16 +12,14 @@ namespace PingPong.Interface
 
         List<IGameEntity> GameEntities { get; set; }
 
+        IGameScreenControllerManager GameScreenControllerManager { get; set; }
+
         void Initialize(ContentManager contentManager);
 
         void DrawEntities(GameTime gameTime, SpriteBatch spriteBatch);
 
         void UpdateEntities(GameTime gameTime);
 
-        void NavigateTo(INavigationManager navigationManager, string pageName);
-
         void OnNavigateTo(INavigationManager navigationManager, dynamic parameters);
-
-        void NavigateBackward(INavigationManager navigationManager);
     }
 }

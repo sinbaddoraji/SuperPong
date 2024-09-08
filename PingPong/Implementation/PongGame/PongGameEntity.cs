@@ -11,7 +11,9 @@ namespace PingPong.Implementation.PongGame
     /// </summary>
     public class PongGameEntity : GameEntity.GameEntity
     {
-        
 
+        public PongGameEntity()
+        {
+        }
     }
 }

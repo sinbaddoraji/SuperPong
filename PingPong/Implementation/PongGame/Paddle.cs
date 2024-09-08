@@ -14,13 +14,22 @@ namespace PingPong.Implementation.PongGame
         public int Width { get; }
         public int Height { get; }
 
+        private GraphicsDevice _graphics;
+
         public Paddle(GraphicsDevice graphics, Color color, int width, int height)
         {
             Width = width;
             Height = height;
 
+            _graphics = graphics;
+
             // Create paddle texture
             Texture = PaddleTexture.CreatePaddleTexture(graphics, color, width, height);
+        }
+
+        public void ChangeColor(Color color)
+        {
+            Texture = PaddleTexture.CreatePaddleTexture(_graphics, color, Width, Height);
         }
 
         private float _computerPaddleSpeed = 1000;

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using PingPong.Interface;
 using PingPong.SimpleSprite;
 using System;
 
@@ -8,8 +9,6 @@ namespace PingPong.Implementation.PongGame;
 
 public class PaddleBallLaunchAimer : PongGameEntity
 {
-    private readonly float _inputCooldown = 0.2f; // 200ms cooldown for input
-    private float _timeSinceLastInput;
     private readonly GraphicsDevice _graphics;
     private readonly Color _color;
     private int _length;
@@ -26,7 +25,9 @@ public class PaddleBallLaunchAimer : PongGameEntity
     public delegate void BallLaunchHandler(Vector2 launchDirection);
     public event BallLaunchHandler OnBallLaunch;
 
-    public PaddleBallLaunchAimer(GraphicsDevice graphics, Color color, int length, int angle,bool isPointingUpwards = true)
+    IGameScreenControllerManager _gameScreenControllerManager;
+
+    public PaddleBallLaunchAimer(GraphicsDevice graphics, IGameScreenControllerManager gameScreenControllerManager, Color color, int length, int angle,bool isPointingUpwards = true)
     {
         _graphics = graphics;
         _color = color;
@@ -34,6 +35,14 @@ public class PaddleBallLaunchAimer : PongGameEntity
         _angle = angle;
         _isPointingUpwards = isPointingUpwards;
         // Create paddle texture
+
+        _gameScreenControllerManager = gameScreenControllerManager;
+
+
+        OnBallLaunch += (launchDirection) =>
+        {
+            // Launch the ball
+        };
 
         if (_isPointingUpwards)
         {
@@ -47,30 +56,19 @@ public class PaddleBallLaunchAimer : PongGameEntity
         }
         else
         {
-            
+            _angle = 0;
         }
 
         length = 200;
         Texture = LineTexture.CreateLineTexture(_graphics, _color, length);
     }
 
-    
-    private void HandleInput(Keys key, ButtonState buttonState, float thumbstickDirection, Action moveAction, float threshold = 0.5f)
+    public void ChangeColor(Color color)
     {
-        var keyboardState = Keyboard.GetState();
-
-        if ((_timeSinceLastInput <= 0) && (keyboardState.IsKeyDown(key) || buttonState == ButtonState.Pressed || Math.Abs(thumbstickDirection) > threshold))
-        {
-            moveAction();
-        }
-
-        // Check select option
-        if ((_timeSinceLastInput <= 0) && (keyboardState.IsKeyDown(key) || buttonState == ButtonState.Pressed || Math.Abs(thumbstickDirection) > threshold))
-        {
-            // Release the ball
-        }
+        Texture = LineTexture.CreateLineTexture(_graphics, color, _length);
     }
 
+    
     public void AimLeft()
     {
         if (_isPointingUpwards)
@@ -121,7 +119,18 @@ public class PaddleBallLaunchAimer : PongGameEntity
 
     public void LaunchBall()
     {
-        OnBallLaunch.Invoke(new Vector2(0,0));
+        // Launch the ball based on angle and rotation of the Texture
+        var launchDirection = new Vector2(0, 0);
+        if (_isPointingUpwards)
+        {
+            launchDirection = new Vector2((float)Math.Cos(MathHelper.ToRadians(_angle)), (float)Math.Sin(MathHelper.ToRadians(_angle)));
+        }
+        else
+        {
+            launchDirection = new Vector2((float)Math.Cos(MathHelper.ToRadians(_angle)), (float)Math.Sin(MathHelper.ToRadians(_angle)));
+        }
+
+        OnBallLaunch.Invoke(launchDirection);
     }
 
     public override void Draw(GameTime gameTime, SpriteBatch spriteBatch, Color color)
@@ -131,24 +140,68 @@ public class PaddleBallLaunchAimer : PongGameEntity
 
     public override void Update(GameTime gameTime)
     {
+        if(!IsActive)
+            return;
        
         // TODO: Add logic that checks if the controller is for player 1 or 2
         var gamePadState = GamePad.GetState(PlayerIndex.One);
 
-        if (_timeSinceLastInput > 0)
-        {
-            _timeSinceLastInput -= (float)gameTime.ElapsedGameTime.TotalSeconds;
-        }
-
         if (IsActive)
         {
-            HandleInput(Keys.Up, gamePadState.DPad.Up, 0.0f, ExtendAimLine);
-            HandleInput(Keys.Down, gamePadState.DPad.Down, 0.0f, ReduceAimLine);
+            if (!_isPointingUpwards)
+            {
+                if (_gameScreenControllerManager.PlayerTwoKeyUp())
+                {
+                    ExtendAimLine();
+                }
 
-            HandleInput(Keys.Left, gamePadState.DPad.Down, gamePadState.ThumbSticks.Left.Y < -0.5 ? -1 : 0, AimLeft);
-            HandleInput(Keys.Right, gamePadState.DPad.Up, gamePadState.ThumbSticks.Left.Y > 0.5 ? 1 : 0, AimRight);
-            HandleInput(Keys.Enter, gamePadState.Buttons.A, gamePadState.Triggers.Right, LaunchBall, 0.5f);
-            //UpdateSprite();
+                if (_gameScreenControllerManager.PlayerTwoKeyDown())
+                {
+                    ReduceAimLine();
+                }
+
+                if (_gameScreenControllerManager.PlayerTwoKeyLeft())
+                {
+                    AimLeft();
+                }
+
+                if (_gameScreenControllerManager.PlayerTwoKeyRight())
+                {
+                    AimRight();
+                }
+
+                if (_gameScreenControllerManager.PlayerTwoKeyAction())
+                {
+                    LaunchBall();
+                }
+            }
+            else
+            {
+                if (_gameScreenControllerManager.PlayerOneKeyUp())
+                {
+                    ExtendAimLine();
+                }
+
+                if (_gameScreenControllerManager.PlayerOneKeyDown())
+                {
+                    ReduceAimLine();
+                }
+
+                if (_gameScreenControllerManager.PlayerOneKeyLeft())
+                {
+                    AimLeft();
+                }
+
+                if (_gameScreenControllerManager.PlayerOneKeyRight())
+                {
+                    AimRight();
+                }
+
+                if (_gameScreenControllerManager.PlayerOneKeyAction())
+                {
+                    LaunchBall();
+                }
+            }
         }
     }
 }

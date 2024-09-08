@@ -14,8 +14,9 @@ namespace PingPong
         public SpriteBatch _spriteBatch;
 
 
-        private IGameScreen _mainMenuScreen;
-        private IGameScreen _pongGameScreen;
+        private IGameScreen MainMenuScreen { get; set; }
+        private IGameScreen PongGameScreen { get; set; }
+        private IGameScreen GameCustomizationScreen { get; set; }
         private INavigationManager _navigationManager;
 
 
@@ -40,42 +41,47 @@ namespace PingPong
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // Initialize screens
-            _mainMenuScreen = new GameMenuScreen(GraphicsDevice, _graphics);
+            MainMenuScreen = new GameMenuScreen(GraphicsDevice, _graphics);
             //_mainMenyScreen.ScreenSize = (_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
 
-            _pongGameScreen = new PongGameScreen(GraphicsDevice, _graphics);
+            PongGameScreen = new PongGameScreen(GraphicsDevice, _graphics);
+            GameCustomizationScreen = new GameCustomizationScreen(GraphicsDevice, _graphics);
 
-            _navigationManager.RegisterScreen(nameof(_mainMenuScreen), _mainMenuScreen);
-            _navigationManager.RegisterScreen(nameof(_pongGameScreen), _pongGameScreen);
+            _navigationManager.RegisterScreen(nameof(MainMenuScreen), MainMenuScreen);
+            _navigationManager.RegisterScreen(nameof(PongGameScreen), PongGameScreen);
+            _navigationManager.RegisterScreen(nameof(GameCustomizationScreen), GameCustomizationScreen);
+
 
             // Subscribe to event
-            ((GameMenuScreen)_mainMenuScreen).OnMenuOptionSelected += selectedOption =>
+            ((GameMenuScreen)MainMenuScreen).OnMenuOptionSelected += selectedOption =>
             {
-                _navigationManager.NavigateTo(nameof(_pongGameScreen), (GameMode)selectedOption);
+                if (((GameMode)selectedOption) == GameMode.Exit)
+                {
+                    Exit();
+                }
+                //_navigationManager.NavigateTo(nameof(_pongGameScreen), (GameMode)selectedOption);
+                _navigationManager.NavigateTo(nameof(GameCustomizationScreen), (GameMode)selectedOption);
             };
 
             // Initialize screens
-            _mainMenuScreen.Initialize(Content);
-            _pongGameScreen.Initialize(Content);
+            MainMenuScreen.Initialize(Content);
+            GameCustomizationScreen.Initialize(Content);
+            PongGameScreen.Initialize(Content);
+            
         }
 
        
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
-                Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-
+            _navigationManager.CurrentScreen.UpdateEntities(gameTime);
 
             var keyboardState = Keyboard.GetState();
 
-            if (keyboardState.IsKeyDown(Keys.Delete))
-            {
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
+                GamePad.GetState(PlayerIndex.Two).Buttons.Back == ButtonState.Pressed ||
+                keyboardState.IsKeyDown(Keys.Escape) || keyboardState.IsKeyDown(Keys.Delete))
                 _navigationManager.NavigateBackward();
-            }
 
-            _navigationManager.CurrentScreen.UpdateEntities(gameTime);
-            
             base.Update(gameTime);
         }
 

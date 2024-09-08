@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using PingPong.Implementation.Controller;
 using PingPong.Implementation.GameEntity;
 using PingPong.Implementation.GameMenuScreen;
 using PingPong.Interface;
@@ -40,6 +41,8 @@ public class GameMenuScreen : IGameScreen
     public (int, int) ScreenSize { get; set; }
     public List<IGameEntity> GameEntities { get; set; } = new();
 
+    public IGameScreenControllerManager GameScreenControllerManager { get; set; }
+
     public delegate void MenuOptionSelectedHandler(int selectedOption);
     public event MenuOptionSelectedHandler OnMenuOptionSelected;
 
@@ -49,7 +52,7 @@ public class GameMenuScreen : IGameScreen
 
         // Load snowflake texture
         _snowflakeTexture = SnowFlakeTexture.CreateSnowflakeTexture(_graphicsDevice, 8, 8);
-
+        GameScreenControllerManager = new GameScreenControllerManager();
 
         // Initialize snowflakes with random positions and speeds
         for (int i = 0; i < 50; i++)
@@ -67,7 +70,7 @@ public class GameMenuScreen : IGameScreen
         // Create menu
         _verticalMenu = new VerticalMenu(TitleName, 
             new List<string> { OptionOne, OptionTwo, OptionThree, OptionFour, OptionFive }, 
-            contentManager.Load<SpriteFont>("MenuItem"), Color.White, Color.Yellow)
+            contentManager.Load<SpriteFont>("MenuItem"), Color.White, Color.Yellow, GameScreenControllerManager)
         {
             Spacing = 50,
             TitleSpriteFont = contentManager.Load<SpriteFont>("MenuTitleFont")
@@ -91,6 +94,8 @@ public class GameMenuScreen : IGameScreen
 
     public void UpdateEntities(GameTime gameTime)
     {
+        GameScreenControllerManager.Update(gameTime);
+
         GameEntities.ForEach(entity => entity.Update(gameTime));
     }
 

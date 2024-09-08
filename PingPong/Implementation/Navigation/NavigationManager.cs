@@ -7,11 +7,11 @@ namespace PingPong.Implementation.Navigation
     internal class NavigationManager : INavigationManager
     {
         // Stack to track navigation history for back navigation.
-        private Stack<IGameScreen> _backwardStack = new Stack<IGameScreen>();
+        private readonly Stack<IGameScreen> _backwardStack = new();
         // Stack to track forward navigation.
-        private Stack<IGameScreen> _forwardStack = new Stack<IGameScreen>();
+        private readonly Stack<IGameScreen> _forwardStack = new();
         // Dictionary to store registered screens by their names.
-        private Dictionary<string, IGameScreen> _screens = new Dictionary<string, IGameScreen>();
+        private readonly Dictionary<string, IGameScreen> _screens = new();
 
         // Property for the current screen.
         public IGameScreen CurrentScreen { get; private set; }
