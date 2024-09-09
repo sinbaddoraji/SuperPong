@@ -5,6 +5,8 @@ using PingPong.Interface;
 using PingPong.SimpleSprite;
 using System;
 using nkast.Aether.Physics2D.Dynamics;
+using System.Drawing;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace PingPong.Implementation.PongGame;
 
@@ -14,19 +16,19 @@ public class PaddleBallLaunchAimer : PongGameEntity
     private readonly Color _color;
     private int _length;
     private int _angle;
-    private bool _isPointingUpwards = false;
+    private readonly bool _isPointingUpwards = false;
 
-    private int effectiveMinAngle = 0;
-    private int effectiveMaxAngle = 0;
+    private readonly int _effectiveMinAngle = 0;
+    private readonly int _effectiveMaxAngle = 0;
 
-    private int _maxHeight = 100;
-    private int _minHeight = 50;
+    private readonly int _maxHeight = 100;
+    private readonly int _minHeight = 50;
 
     // Release the ball event
     public delegate void BallLaunchHandler(Vector2 launchDirection);
     public event BallLaunchHandler OnBallLaunch;
 
-    IGameScreenControllerManager _gameScreenControllerManager;
+    readonly IGameScreenControllerManager _gameScreenControllerManager;
 
     public PaddleBallLaunchAimer(GraphicsDevice graphics, ref World world, IGameScreenControllerManager gameScreenControllerManager, Color color, int length, int angle,bool isPointingUpwards = true) : base(ref world)
     {
@@ -48,8 +50,8 @@ public class PaddleBallLaunchAimer : PongGameEntity
         if (_isPointingUpwards)
         {
              _angle = 180;
-            effectiveMinAngle = 115;
-            effectiveMaxAngle = 245;
+            _effectiveMinAngle = 115;
+            _effectiveMaxAngle = 245;
 
             // TODO: Comment the below out
             //effectiveMinAngle = int.MinValue;
@@ -74,7 +76,7 @@ public class PaddleBallLaunchAimer : PongGameEntity
     {
         if (_isPointingUpwards)
         {
-            if (_angle <= effectiveMinAngle)
+            if (_angle <= _effectiveMinAngle)
             {
                 return;
             }
@@ -90,7 +92,7 @@ public class PaddleBallLaunchAimer : PongGameEntity
     {
         if (_isPointingUpwards)
         {
-            if (_angle >= effectiveMaxAngle)
+            if (_angle >= _effectiveMaxAngle)
             {
                 return;
             }
@@ -139,6 +141,7 @@ public class PaddleBallLaunchAimer : PongGameEntity
         spriteBatch.Draw(Texture, Position, null, color, MathHelper.ToRadians(_angle), new Vector2(0, 0), 1.0f, SpriteEffects.None, 0);
     }
 
+
     public override void InitializePhysics(Vector2 initialPosition)
     {
         // throw new NotImplementedException();
@@ -146,67 +149,59 @@ public class PaddleBallLaunchAimer : PongGameEntity
 
     public new void Update(GameTime gameTime)
     {
-        if(!IsActive)
-            return;
-       
-        // TODO: Add logic that checks if the controller is for player 1 or 2
-        var gamePadState = GamePad.GetState(PlayerIndex.One);
-
-        if (IsActive)
+        if (!IsActive) return;
+        if (!_isPointingUpwards)
         {
-            if (!_isPointingUpwards)
+            if (_gameScreenControllerManager.PlayerTwoKeyUp())
             {
-                if (_gameScreenControllerManager.PlayerTwoKeyUp())
-                {
-                    ExtendAimLine();
-                }
-
-                if (_gameScreenControllerManager.PlayerTwoKeyDown())
-                {
-                    ReduceAimLine();
-                }
-
-                if (_gameScreenControllerManager.PlayerTwoKeyLeft())
-                {
-                    AimLeft();
-                }
-
-                if (_gameScreenControllerManager.PlayerTwoKeyRight())
-                {
-                    AimRight();
-                }
-
-                if (_gameScreenControllerManager.PlayerTwoKeyAction())
-                {
-                    LaunchBall();
-                }
+                ExtendAimLine();
             }
-            else
+
+            if (_gameScreenControllerManager.PlayerTwoKeyDown())
             {
-                if (_gameScreenControllerManager.PlayerOneKeyUp())
-                {
-                    ExtendAimLine();
-                }
+                ReduceAimLine();
+            }
 
-                if (_gameScreenControllerManager.PlayerOneKeyDown())
-                {
-                    ReduceAimLine();
-                }
+            if (_gameScreenControllerManager.PlayerTwoKeyLeft())
+            {
+                AimLeft();
+            }
 
-                if (_gameScreenControllerManager.PlayerOneKeyLeft())
-                {
-                    AimLeft();
-                }
+            if (_gameScreenControllerManager.PlayerTwoKeyRight())
+            {
+                AimRight();
+            }
 
-                if (_gameScreenControllerManager.PlayerOneKeyRight())
-                {
-                    AimRight();
-                }
+            if (_gameScreenControllerManager.PlayerTwoKeyAction())
+            {
+                LaunchBall();
+            }
+        }
+        else
+        {
+            if (_gameScreenControllerManager.PlayerOneKeyUp())
+            {
+                ExtendAimLine();
+            }
 
-                if (_gameScreenControllerManager.PlayerOneKeyAction())
-                {
-                    LaunchBall();
-                }
+            if (_gameScreenControllerManager.PlayerOneKeyDown())
+            {
+                ReduceAimLine();
+            }
+
+            if (_gameScreenControllerManager.PlayerOneKeyLeft())
+            {
+                AimLeft();
+            }
+
+            if (_gameScreenControllerManager.PlayerOneKeyRight())
+            {
+                AimRight();
+            }
+
+            if (_gameScreenControllerManager.PlayerOneKeyAction())
+            {
+                LaunchBall();
             }
         }
     }

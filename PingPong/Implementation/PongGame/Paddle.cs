@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using nkast.Aether.Physics2D.Dynamics;
 using PingPong.Helpers;
@@ -12,8 +11,8 @@ namespace PingPong.Implementation.PongGame
         public int Width { get; }
         public int Height { get; }
 
-        private GraphicsDevice _graphics;
-        private float _computerPaddleSpeed = 1000f; // AI paddle speed
+        private readonly GraphicsDevice _graphics;
+        private readonly float _computerPaddleSpeed = 1000f; // AI paddle speed
 
         public Paddle(GraphicsDevice graphics, ref World world, Color color, int width, int height) : base(ref world)
         {
@@ -36,21 +35,21 @@ namespace PingPong.Implementation.PongGame
         public override void InitializePhysics(Vector2 initialPosition)
         {
             // Create a rectangle physics body for the paddle
-            _physicsBody = _world.CreateRectangle(ConvertUnits.ToSimUnits(Width), ConvertUnits.ToSimUnits(Height), 1f);
-            _physicsBody.BodyType = BodyType.Kinematic; // Paddles are kinematic as they are controlled directly
+            PhysicsBody = World.CreateRectangle(ConvertUnits.ToSimUnits(Width), ConvertUnits.ToSimUnits(Height), 1f);
+            PhysicsBody.BodyType = BodyType.Kinematic; // Paddles are kinematic as they are controlled directly
             // _physicsBody.Friction = 0f; // No friction for smooth movement
-            _physicsBody.Position = ConvertUnits.ToSimUnits(initialPosition);
+            PhysicsBody.Position = ConvertUnits.ToSimUnits(initialPosition);
         }
 
         // Method to move the paddle for player or AI
         public void Move(Vector2 newPosition)
         {
             // Set the paddle's position directly for controlled movement
-            _physicsBody.Position = ConvertUnits.ToSimUnits(newPosition);
+            PhysicsBody.Position = ConvertUnits.ToSimUnits(newPosition);
         }
 
         // AI Paddle movement logic
-        public void UpdateAI(GameTime gameTime, Vector2 ballPosition)
+        public void UpdateAi(GameTime gameTime, Vector2 ballPosition)
         {
             // Simple AI: Move paddle towards the ball's X position
             float targetX = ballPosition.X - Width / 2; // Center paddle on ball's X
@@ -67,7 +66,18 @@ namespace PingPong.Implementation.PongGame
         public new void Update(GameTime gameTime)
         {
             // Sync the display position with the physics body
-            Position = ConvertUnits.ToDisplayUnits(_physicsBody.Position);
+            // Position = ConvertUnits.ToDisplayUnits(_physicsBody.Position);
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            // Draw the paddle at the current position
+            spriteBatch.Draw(Texture, Position, Color.White);
+        }
+
+        public new Rectangle GetRectangle()
+        {
+            return new Rectangle((int)Position.X, (int)Position.Y, Texture.Width, Texture.Height);
         }
     }
 }

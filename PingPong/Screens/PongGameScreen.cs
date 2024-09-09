@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -8,7 +6,6 @@ using nkast.Aether.Physics2D.Dynamics;
 using PingPong.Enum;
 using PingPong.Helpers;
 using PingPong.Implementation.Controller;
-using PingPong.Implementation.GameEntity;
 using PingPong.Implementation.PongGame;
 using PingPong.Interface;
 using PingPong.Model.PongGame;
@@ -18,45 +15,21 @@ namespace PingPong.Screens
 {
     internal class PongGameScreen : IGameScreen
     {
+        public int ScreenWidth { get; set; }
+        public int ScreenHeight { get; set; }
 
-        Texture2D _ballTexture;
-        Vector2 _ballPosition;
-        Vector2 _ballVelocity;
+        public bool Player1IsCpu { get; set; }
+        public bool Player2IsCpu { get; set; }
 
-        float _paddleSpeed = 800f;
-        float _ballSpeedIncrease = 1.2f; // Increase in ball speed over time
+        private readonly PaddleBallLaunchAimer _paddleBallLaunchAimer;
+        private readonly PaddleBallLaunchAimer _paddleBallLaunchAimer2;
 
-        private Texture2D _paddleTexture2D;
+        private readonly PongArena _pongArena;
+        private readonly Paddle _player1Paddle;
+        private readonly Paddle _player2Paddle;
+        private readonly Ball _ball;
 
-        public int ScreenWidth;
-        public int ScreenHeight;
-
-        private GraphicsDeviceManager _graphics;
-        private readonly SpriteBatch _spriteBatch;
-
-        private int _ballDiameter = 20;
-
-        private float _cpu1ReactionTimer = 0f;  // Timer for the reaction delay
-        private float _cpu2ReactionTimer = 0.1f; // Time in seconds before CPU reacts
-
-        private float _cpuReactionTime = 0.1f; // Time in seconds before CPU reacts
-       
-        private float _cpuErrorMargin = 10f;   // Adds a margin of error to make the CPU less perfect
-
-        public bool Player1IsCpu = false;
-        public bool Player2IsCpu = false;
-
-        private PaddleBallLaunchAimer _paddleBallLaunchAimer;
-        private PaddleBallLaunchAimer _paddleBallLaunchAimer2;
-
-        private Paddle player1Paddle;
-        private Paddle player2Paddle;
-        private Ball ball;
-
-        private GameEntity player1ScoreText;
-        private GameEntity player2ScoreText;
-
-        private bool isPlayer1sTurn = true;
+        private readonly bool _isPlayer1STurn = true;
 
         private Rectangle ArenaRectangle { get; set; }
 
@@ -69,32 +42,31 @@ namespace PingPong.Screens
 
         public Color Player2Color { get; set; } = Color.Red;
 
-        private SpriteFont gameFont;
+        public int Player1Score { get; set; } = 0;
 
-        private World _world;
+        public int Player2Score { get; set; } = 0;
 
-        public IGameScreenControllerManager GameScreenControllerManager { get; set; } = new GameScreenControllerManager(0)
-        {
-            
-        };
+        private SpriteFont _gameFont;
+
+        private readonly World _world;
+
+        public IGameScreenControllerManager GameScreenControllerManager { get; set; } = new GameScreenControllerManager(0);
 
 
         public PongGameScreen(GraphicsDevice graphicsDevice, GraphicsDeviceManager graphics)
         {
-            //_ballTexture = BallTexture.CreateBallTexture(graphicsDevice, _ballDiameter);
-            //_paddleTexture2D = PaddleTexture.CreatePaddleTexture(graphicsDevice, 300, 20);
             _world = new World();
 
-            player1Paddle = new Paddle(graphicsDevice, ref _world, Player1Color, 200, 30);
-            player2Paddle = new Paddle(graphicsDevice, ref _world, Player2Color, 200, 30);
-            ball = new Ball(graphicsDevice, ref _world, Color.White, 30);
+            _player1Paddle = new Paddle(graphicsDevice, ref _world, Player1Color, 200, 30);
+            _player2Paddle = new Paddle(graphicsDevice, ref _world, Player2Color, 200, 30);
+            _ball = new Ball(graphicsDevice, ref _world, Color.White, 30)
+            {
+                IsVisible = false
+            };
 
             _paddleBallLaunchAimer = new PaddleBallLaunchAimer(graphicsDevice, ref _world, GameScreenControllerManager, Player1Color, 50, 30, true);
             _paddleBallLaunchAimer2 = new PaddleBallLaunchAimer(graphicsDevice, ref _world, GameScreenControllerManager, Player2Color, 50, 30, false);
 
-            player1ScoreText = new GameEntity();
-
-           
 
             _paddleBallLaunchAimer.IsActive = false;
             _paddleBallLaunchAimer.IsVisible = false;
@@ -103,7 +75,7 @@ namespace PingPong.Screens
 
             void PaddleBallLaunchAimerOnOnBallLaunch(Vector2 launchdirection)
             {
-                ball.IsVisible = true;
+                _ball.IsVisible = true;
                  // ball.Velocity = launchdirection;
                 _paddleBallLaunchAimer.IsActive = false;
                 _paddleBallLaunchAimer.IsVisible = false;
@@ -111,70 +83,65 @@ namespace PingPong.Screens
 
 
 
-            _graphics = graphics;
-
-            ScreenWidth = _graphics.PreferredBackBufferWidth;
-            ScreenHeight = _graphics.PreferredBackBufferHeight;
+            ScreenWidth = graphics.PreferredBackBufferWidth;
+            ScreenHeight = graphics.PreferredBackBufferHeight;
 
             int pongAreaWidth = ScreenWidth - 100;
             int pongAreaHeight = ScreenHeight - 100;
 
-            PongArena pongArena = new PongArena(graphicsDevice, Color.White, pongAreaWidth, pongAreaHeight);
+            
+            _pongArena = new PongArena(graphicsDevice, Color.White, pongAreaWidth, pongAreaHeight);
             // Align the arena to the center of the screen
-            pongArena.Position = new Vector2(ScreenWidth / 2 - pongArena.Texture.Width / 2, ScreenHeight / 2 - pongArena.Texture.Height / 2);
+            _pongArena.Position = new Vector2(ScreenWidth / 2 - _pongArena.Texture.Width / 2, ScreenHeight / 2 - _pongArena.Texture.Height / 2);
 
             // Set the arena rectangle for collision detection
-            ArenaRectangle = new Rectangle((int)pongArena.Position.X, (int)pongArena.Position.Y, pongAreaWidth, pongAreaHeight);
-
-            // Add player paddle1 to the bottom middle of the arena
-            // Set paddle position to the bottom middle of the arena rectangle
-
-
-            player1Paddle.Position = new Vector2(ScreenWidth / 2 - player1Paddle.Texture.Width / 2, ScreenHeight - 100);
-
-            player2Paddle.Position = new Vector2(ScreenWidth / 2 - player2Paddle.Texture.Width / 2, 70);
-
-            SetAimerPositions();
-
-            // if player 1's turn, draw ball just above player 1's paddle
-            ball.Position = isPlayer1sTurn ?
-                new Vector2(ScreenWidth / 2 - ball.Texture.Width / 2, ScreenHeight - 100 - ball.Texture.Height) :
-                new Vector2(ScreenWidth / 2 - ball.Texture.Width / 2, 70 + player2Paddle.Texture.Height);
+            ArenaRectangle = new Rectangle((int)_pongArena.Position.X, (int)_pongArena.Position.Y, pongAreaWidth, pongAreaHeight);
 
             GameEntities = new List<IGameEntity>
             {
-                pongArena, player1Paddle, player2Paddle, ball,
+                _pongArena, _player1Paddle, _player2Paddle, _ball, 
                 _paddleBallLaunchAimer, _paddleBallLaunchAimer2
             };
 
-            InitializeGame();
-
             _world = new World();
-            
-        }
 
+            InitializePhysicsEntities();
+
+        }
 
         void IGameScreen.Initialize(ContentManager contentManager)
         {
-            gameFont = contentManager.Load<SpriteFont>("MenuItem");
-            
+            _gameFont = contentManager.Load<SpriteFont>("MenuItem");
         }
 
         public void DrawEntities(GameTime gameTime, SpriteBatch spriteBatch)
         {
-            GameEntities.ForEach(entity => entity.Draw(gameTime, spriteBatch, Color.White));
+            //
+            //GameEntities.ForEach(entity => entity.Draw(gameTime, spriteBatch, Color.White))
+
+            // Update paddleBallLaunchAimer position
+            SetAimerPositions();
+
+            // Draw the game entities
+            _player1Paddle.Draw(spriteBatch);
+            _player2Paddle.Draw(spriteBatch);
+            _ball.Draw(spriteBatch);
+            _paddleBallLaunchAimer.Draw(gameTime,spriteBatch, Player1Color);
+            _paddleBallLaunchAimer2.Draw(gameTime, spriteBatch, Player2Color);
+            _pongArena.Draw(gameTime, spriteBatch, Color.White);
+
 
             // Draw player 1 score
 
             //Get size of score text
-            var player2ScoreTextSize = gameFont.MeasureString("Player 1: 0");
+            var player2ScoreTextSize = _gameFont.MeasureString("Player 1: 0");
 
             var p2Pos = new Vector2(ArenaRectangle.X + ArenaRectangle.Width - player2ScoreTextSize.X, ArenaRectangle.Y - player2ScoreTextSize.Y - 5);
-            spriteBatch.DrawString(gameFont, "Score: 0", p2Pos, Player2Color);
+            spriteBatch.DrawString(_gameFont, $"Score: {Player1Score}", p2Pos, Player2Color);
 
             // Draw player 2 score
             var p1Pos = new Vector2(ArenaRectangle.X, ArenaRectangle.Y + ArenaRectangle.Height + 5);
-            spriteBatch.DrawString(gameFont, "Score: 0", p1Pos, Player1Color);
+            spriteBatch.DrawString(_gameFont, $"Score: {Player2Score}", p1Pos, Player1Color);
 
         }
 
@@ -184,12 +151,6 @@ namespace PingPong.Screens
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
             _world.Step(deltaTime);
 
-            
-
-            // Update game entities (their position in pixels based on physics world)
-            ball.Update(gameTime);
-            player1Paddle.Update(gameTime);
-            player2Paddle.Update(gameTime);
 
             GameScreenControllerManager.Update(gameTime);
 
@@ -197,23 +158,26 @@ namespace PingPong.Screens
             {
                 _paddleBallLaunchAimer.IsActive = true;
                 _paddleBallLaunchAimer.IsVisible = true;
-                ball.IsVisible = false;
+                _ball.IsVisible = false;
             }
 
             if (GameState == GameState.Player2WaitingToServe)
             {
                 _paddleBallLaunchAimer2.IsActive = true;
                 _paddleBallLaunchAimer2.IsVisible = true;
-                ball.IsVisible = false;
+                _ball.IsVisible = false;
             }
 
-            GameEntities.ForEach(entity => entity.Update(gameTime));
+            // Update the game entities
+            _paddleBallLaunchAimer.Update(gameTime);
+            _paddleBallLaunchAimer2.Update(gameTime);
+            _player1Paddle.Update(gameTime);
+            _player2Paddle.Update(gameTime);
+            _ball.Update(gameTime);
 
-        }
 
-        public void NavigateTo(INavigationManager navigationManager, string pageName)
-        {
-            throw new NotImplementedException();
+            // GameEntities.ForEach(entity => entity.Update(gameTime));
+
         }
 
         public void OnNavigateTo(INavigationManager navigationManager, dynamic parameters)
@@ -241,66 +205,52 @@ namespace PingPong.Screens
             Player1Color = options.Player1Color;
             Player2Color = options.Player2Color;
 
-            player1Paddle.ChangeColor(Player1Color);
-            player2Paddle.ChangeColor(Player2Color);
+            ResetPaddleProperties();
+        }
+
+        private void ResetPaddleProperties()
+        {
+            _player1Paddle.ChangeColor(Player1Color);
+            _player2Paddle.ChangeColor(Player2Color);
 
             _paddleBallLaunchAimer.ChangeColor(Player1Color);
             _paddleBallLaunchAimer2.ChangeColor(Player2Color);
-
-            InitializeGame();
         }
 
-        public void NavigateBackward(INavigationManager navigationManager)
+        private void SetPaddlePosition()
         {
-            
+            _player1Paddle.Position = new Vector2(ScreenWidth / 2 - _player1Paddle.Texture.Width / 2, ScreenHeight - 100);
+            _player2Paddle.Position = new Vector2(ScreenWidth / 2 - _player2Paddle.Texture.Width / 2, 70);
         }
-
-        public async Task Initialize(ContentManager contentManager)
-        {
-           
-
-            
-        }
-
-        
 
         private void SetAimerPositions()
         {
             // Draw line above ball
-            var paddle1Location = player1Paddle.GetRectangle();
+            var paddle1Location = _player1Paddle.GetRectangle();
 
-            var paddle1Width = player1Paddle.Width;
+            var paddle1Width = _player1Paddle.Width;
             _paddleBallLaunchAimer.Position = new Vector2(paddle1Location.X + (paddle1Width / 2), paddle1Location.Y);
 
-            var paddle2Location = player2Paddle.GetRectangle();
-            var paddle2Width = player2Paddle.Width;
-            _paddleBallLaunchAimer2.Position = new Vector2(paddle2Location.X + (paddle2Width / 2), paddle2Location.Y + player2Paddle.Height);
+            var paddle2Location = _player2Paddle.GetRectangle();
+            var paddle2Width = _player2Paddle.Width;
+            _paddleBallLaunchAimer2.Position = new Vector2(paddle2Location.X + (paddle2Width / 2), paddle2Location.Y + _player2Paddle.Height);
         }
 
-        private void InitializeGame()
+        private void SetBallPosition()
         {
-            // Initial positions
-            _ballPosition = new Vector2(ScreenWidth / 2, ScreenHeight / 2);
-            _ballVelocity = new Vector2(150, 150); // Set the ball's initial velocity
-
-            //_paddle1Position = new Vector2(ScreenWidth / 2 - _paddleTexture2D.Width * _paddleScale.X / 2, 50); // Top of the screen
-            //_paddle2Position = new Vector2(ScreenWidth / 2 - _paddleTexture2D.Width * _paddleScale.X / 2, ScreenHeight - 70); // Bottom of the screen
-
-            
-            
-            InitializePhysicsEntities();
-
-
+            // if player 1's turn, draw ball just above player 1's paddle
+            _ball.Position = _isPlayer1STurn ?
+                new Vector2(ScreenWidth / 2 - _ball.Texture.Width / 2, ScreenHeight - 100 - _ball.Texture.Height) :
+                new Vector2(ScreenWidth / 2 - _ball.Texture.Width / 2, 70 + _player2Paddle.Texture.Height);
         }
 
+        
         private void InitializePhysicsEntities()
         {
-            // Create physical body for the ball
-            ball.InitializePhysics(new Vector2(ScreenWidth / 2, ScreenHeight / 2));
-
-            // Initialize paddles' physics bodies
-            player1Paddle.InitializePhysics(new Vector2(ScreenWidth / 2, ScreenHeight - 100));
-            player2Paddle.InitializePhysics(new Vector2(ScreenWidth / 2, 70));
+            // Set the initial positions of the entities
+            SetPaddlePosition();
+            SetAimerPositions();
+            SetBallPosition();
 
             // Create static bodies for arena walls
             CreateWall(new Vector2(ScreenWidth / 2, ArenaRectangle.Top), new Vector2(ScreenWidth, 10)); // Top wall

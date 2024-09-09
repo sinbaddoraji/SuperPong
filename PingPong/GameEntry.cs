@@ -10,27 +10,27 @@ namespace PingPong
 {
     public class PongGame : Game
     {
-        public GraphicsDeviceManager _graphics;
-        public SpriteBatch _spriteBatch;
+        public GraphicsDeviceManager Graphics;
+        public SpriteBatch SpriteBatch;
 
 
         private IGameScreen MainMenuScreen { get; set; }
         private IGameScreen PongGameScreen { get; set; }
         private IGameScreen GameCustomizationScreen { get; set; }
-        private INavigationManager _navigationManager;
+        private readonly INavigationManager _navigationManager;
 
 
         public PongGame()
         {
-            _graphics = new GraphicsDeviceManager(this);
+            Graphics = new GraphicsDeviceManager(this);
            
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
             // Set window size
-            _graphics.PreferredBackBufferWidth = 1200;
-            _graphics.PreferredBackBufferHeight = 800;
-            _graphics.ApplyChanges();
+            Graphics.PreferredBackBufferWidth = 1200;
+            Graphics.PreferredBackBufferHeight = 800;
+            Graphics.ApplyChanges();
 
             _navigationManager = new NavigationManager();
         }
@@ -38,14 +38,14 @@ namespace PingPong
         protected override void Initialize()
         {
             base.Initialize();
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
+            SpriteBatch = new SpriteBatch(GraphicsDevice);
 
             // Initialize screens
-            MainMenuScreen = new GameMenuScreen(GraphicsDevice, _graphics);
+            MainMenuScreen = new GameMenuScreen(GraphicsDevice, Graphics);
             //_mainMenyScreen.ScreenSize = (_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);
 
-            PongGameScreen = new PongGameScreen(GraphicsDevice, _graphics);
-            GameCustomizationScreen = new GameCustomizationScreen(GraphicsDevice, _graphics);
+            PongGameScreen = new PongGameScreen(GraphicsDevice, Graphics);
+            GameCustomizationScreen = new GameCustomizationScreen(GraphicsDevice, Graphics);
 
             _navigationManager.RegisterScreen(nameof(MainMenuScreen), MainMenuScreen);
             _navigationManager.RegisterScreen(nameof(PongGameScreen), PongGameScreen);
@@ -91,11 +91,11 @@ namespace PingPong
         {
             GraphicsDevice.Clear(Color.Black);
 
-            _spriteBatch.Begin();
+            SpriteBatch.Begin();
 
-            _navigationManager.CurrentScreen.DrawEntities(gameTime, _spriteBatch);
+            _navigationManager.CurrentScreen.DrawEntities(gameTime, SpriteBatch);
 
-            _spriteBatch.End();
+            SpriteBatch.End();
 
             base.Draw(gameTime);
         }
