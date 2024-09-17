@@ -9,20 +9,31 @@ namespace PingPong.Implementation.PongGame
     /// </summary>
     public abstract class PongGameEntity : GameEntity.GameEntity
     {
+        // Unit conversion constants (ensure consistency with other classes)
+        protected const float UnitToPixel = 100f; // 1 meter = 100 pixels
+        protected const float PixelToUnit = 1f / UnitToPixel;
+
         // Physics body for the entity
         protected Body PhysicsBody;
 
-        // Position of the entity in the world
-        public new Vector2 Position
+        // Position of the entity in pixels
+        public Vector2 Position
         {
-            get => ConvertUnits.ToDisplayUnits(PhysicsBody.Position);
-            set => PhysicsBody.Position = ConvertUnits.ToSimUnits(value);
+            get => PhysicsBody.Position * UnitToPixel; // Convert to pixels
+            set
+            {
+                if (PhysicsBody != null)
+                {
+                    PhysicsBody.Position = value * PixelToUnit; // Convert to simulation units
+                }
+            }
         }
+
 
         // Reference to the physics world
         protected World World;
 
-        protected PongGameEntity(ref World world)
+        protected PongGameEntity(World world)
         {
             World = world;
             PhysicsBody = new Body();

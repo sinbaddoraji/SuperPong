@@ -1,8 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using nkast.Aether.Physics2D.Dynamics;
+using nkast.Aether.Physics2D.Collision.Shapes;
+using nkast.Aether.Physics2D.Common;
 using PingPong.Helpers;
 using PingPong.SimpleSprite;
+using System;
+using PingPong.Implementation.Controller;
+using PingPong.Interface;
 
 namespace PingPong.Implementation.PongGame
 {
@@ -12,9 +17,15 @@ namespace PingPong.Implementation.PongGame
         public int Height { get; }
 
         private readonly GraphicsDevice _graphics;
-        private readonly float _computerPaddleSpeed = 1000f; // AI paddle speed
+        private readonly float _computerPaddleSpeed = 5f;
 
-        public Paddle(GraphicsDevice graphics, ref World world, Color color, int width, int height) : base(ref world)
+        public bool? IsPlayer1 { get; set; } = null;
+
+        public float PaddleSpeed { get; set; } = 5f;
+
+       private IGameScreenControllerManager _gameScreenControllerManager;
+
+        public Paddle(GraphicsDevice graphics, World world, Color color, int width, int height) : base(world)
         {
             Width = width;
             Height = height;
@@ -23,61 +34,191 @@ namespace PingPong.Implementation.PongGame
 
             // Create paddle texture
             Texture = PaddleTexture.CreatePaddleTexture(graphics, color, width, height);
+
+            _gameScreenControllerManager = new GameScreenControllerManager();
+            _gameScreenControllerManager.CooldownPeriod = 0;
         }
 
-        // Changes the paddle's color by regenerating the texture
+        /// <summary>
+        /// Changes the paddle's color by regenerating the texture.
+        /// </summary>
+        /// <param name="color">The new color.</param>
         public void ChangeColor(Color color)
         {
             Texture = PaddleTexture.CreatePaddleTexture(_graphics, color, Width, Height);
         }
 
-        // Initialize the paddle's physics body
+        /// <summary>
+        /// Initializes the paddle's physics body.
+        /// </summary>
+        /// <param name="initialPosition">The initial position in pixels.</param>
         public override void InitializePhysics(Vector2 initialPosition)
         {
-            // Create a rectangle physics body for the paddle
-            PhysicsBody = World.CreateRectangle(ConvertUnits.ToSimUnits(Width), ConvertUnits.ToSimUnits(Height), 1f);
-            PhysicsBody.BodyType = BodyType.Kinematic; // Paddles are kinematic as they are controlled directly
-            // _physicsBody.Friction = 0f; // No friction for smooth movement
-            PhysicsBody.Position = ConvertUnits.ToSimUnits(initialPosition);
+            // Convert initial position to simulation units
+            Vector2 simPosition = initialPosition * PixelToUnit;
+
+            // Create a kinematic body for the paddle at the simulation position
+            PhysicsBody = World.CreateBody(simPosition, 0f, BodyType.Kinematic);
+            PhysicsBody.Tag = "Paddle";
+
+            // Create rectangle vertices for the paddle
+            float halfWidth = (Width / 2f) * PixelToUnit;
+            float halfHeight = (Height / 2f) * PixelToUnit;
+            Vertices paddleVertices = PolygonTools.CreateRectangle(halfWidth, halfHeight);
+
+            // Create a polygon shape using the paddle vertices
+            var paddleShape = new PolygonShape(paddleVertices, 1f); // Density
+
+            // Attach the shape to the body as a fixture
+            var fixture = PhysicsBody.CreateFixture(paddleShape);
+
+            // Set fixture properties
+            fixture.Restitution = 0f;
+            fixture.Friction = 0f;
+
+            // Ensure the physics body doesn't rotate
+            PhysicsBody.FixedRotation = true;
         }
 
-        // Method to move the paddle for player or AI
+        /// <summary>
+        /// Moves the paddle to a new position.
+        /// </summary>
+        /// <param name="newPosition">The new position in pixels.</param>
         public void Move(Vector2 newPosition)
         {
+            // Convert new position to simulation units
+            Vector2 simPosition = newPosition * PixelToUnit;
+
             // Set the paddle's position directly for controlled movement
-            PhysicsBody.Position = ConvertUnits.ToSimUnits(newPosition);
+            PhysicsBody.Position = simPosition;
+            PhysicsBody.Awake = true; // Ensure the body is active
+
+            // Update the visual position
+            Position = newPosition;
         }
 
-        // AI Paddle movement logic
+        /// <summary>
+        /// AI Paddle movement logic.
+        /// </summary>
+        /// <param name="gameTime">Game time information.</param>
+        /// <param name="ballPosition">The ball's position in pixels.</param>
         public void UpdateAi(GameTime gameTime, Vector2 ballPosition)
         {
             // Simple AI: Move paddle towards the ball's X position
-            float targetX = ballPosition.X - Width / 2; // Center paddle on ball's X
-            float paddleSpeed = _computerPaddleSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            float targetX = ballPosition.X;
+            float paddleSpeed = _computerPaddleSpeed * deltaTime * UnitToPixel; // Convert speed to pixels per frame
 
-            // Move paddle towards the target position with some speed limit
-            Vector2 newPosition = new Vector2(MathHelper.Lerp(Position.X, targetX, paddleSpeed), Position.Y);
+            // Calculate the new X position, moving towards the target X
+            float newX = MathHelper.Lerp(Position.X, targetX, paddleSpeed / Math.Abs(targetX - Position.X + 0.01f)); // Added small value to prevent division by zero
 
-            // Set the new position (this automatically updates the physics body)
-            Move(newPosition);
+            // Clamp the new X position within screen bounds (adjust as needed)
+            newX = MathHelper.Clamp(newX, 0 + Width / 2f, _graphics.Viewport.Width - Width / 2f);
+
+            // Set the new position
+            Move(new Vector2(newX, Position.Y));
         }
 
-        // Update the paddle position based on the physics body
-        public new void Update(GameTime gameTime)
+        /// <summary>
+        /// Updates the paddle's state.
+        /// </summary>
+        /// <param name="gameTime">Game time information.</param>
+        public override void Update(GameTime gameTime)
         {
-            // Sync the display position with the physics body
-            // Position = ConvertUnits.ToDisplayUnits(_physicsBody.Position);
+            base.Update(gameTime);
+            _gameScreenControllerManager.Update(gameTime);
+
+            if (IsActive)
+            {
+                if (IsPlayer1 == true)
+                {
+                    if (_gameScreenControllerManager.PlayerOneKeyLeft())
+                    {
+                        PhysicsBody.LinearVelocity = new Vector2(-5, 0);
+                        PhysicsBody.Awake = true;
+                    }
+                    else if (_gameScreenControllerManager.PlayerOneKeyRight())
+                    {
+                        PhysicsBody.LinearVelocity = new Vector2(5, 0);
+                        PhysicsBody.Awake = true;
+                    }
+                    else
+                    {
+                        // Stop the paddle when no key is pressed
+                        PhysicsBody.LinearVelocity = Vector2.Zero;
+                    }
+                }
+                else if (IsPlayer1 == false)
+                {
+                    if (_gameScreenControllerManager.PlayerTwoKeyLeft())
+                    {
+                        PhysicsBody.LinearVelocity = new Vector2(-PaddleSpeed, 0);
+                        PhysicsBody.Awake = true;
+                    }
+                    else if (_gameScreenControllerManager.PlayerTwoKeyRight())
+                    {
+                        PhysicsBody.LinearVelocity = new Vector2(PaddleSpeed, 0);
+                        PhysicsBody.Awake = true;
+                    }
+                    else
+                    {
+                        // Stop the paddle when no key is pressed
+                        PhysicsBody.LinearVelocity = Vector2.Zero;
+                    }
+                }
+                else
+                {
+                    // Call the AI update method for the AI-controlled paddle
+                    // UpdateAi(gameTime, Ball.Position);
+                }
+            }
+
+            // Sync the display position with the physics body's position
+            Position = PhysicsBody.Position * UnitToPixel;
         }
 
+
+
+        /// <summary>
+        /// Draws the paddle to the screen.
+        /// </summary>
+        /// <param name="spriteBatch">The sprite batch used for drawing.</param>
         public void Draw(SpriteBatch spriteBatch)
         {
-            // Draw the paddle at the current position
-            spriteBatch.Draw(Texture, Position, Color.White);
+            // Draw the paddle with its origin at the center
+            spriteBatch.Draw(
+                Texture,
+                Position,
+                null,
+                Color.White,
+                0f,
+                new Vector2(Texture.Width / 2f, Texture.Height / 2f),
+                1f,
+                SpriteEffects.None,
+                0f);
         }
 
-        public new Rectangle GetRectangle()
+        /// <summary>
+        /// Gets the rectangle representing the paddle's bounds.
+        /// </summary>
+        /// <returns>A rectangle in pixels.</returns>
+        public Rectangle GetRectangle()
         {
-            return new Rectangle((int)Position.X, (int)Position.Y, Texture.Width, Texture.Height);
+            return new Rectangle(
+                (int)(Position.X - Texture.Width / 2f),
+                (int)(Position.Y - Texture.Height / 2f),
+                Texture.Width,
+                Texture.Height);
+        }
+
+        /// <summary>
+        /// Resets the paddle's velocity (if applicable).
+        /// </summary>
+        public void ResetVelocity()
+        {
+            PhysicsBody.LinearVelocity = Vector2.Zero;
+            PhysicsBody.AngularVelocity = 0f;
+            PhysicsBody.Awake = true;
         }
     }
 }

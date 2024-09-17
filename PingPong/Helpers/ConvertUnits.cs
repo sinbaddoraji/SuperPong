@@ -16,16 +16,6 @@ public static class ConvertUnits
         return displayUnits * _simUnitsToDisplayUnitsRatio;
     }
 
-    /// <summary>
-    /// Converts from display units (pixels) to simulation units (meters).
-    /// </summary>
-    public static nkast.Aether.Physics2D.Common.Vector2 ToSimUnits(Vector2 displayUnits)
-    {
-        return new nkast.Aether.Physics2D.Common.Vector2(
-                       displayUnits.X * _simUnitsToDisplayUnitsRatio,
-                                  displayUnits.Y * _simUnitsToDisplayUnitsRatio
-                              );
-    }
 
     /// <summary>
     /// Converts from simulation units (meters) to display units (pixels).
@@ -52,13 +42,5 @@ public static class ConvertUnits
         _simUnitsToDisplayUnitsRatio = 1f / ratio;
     }
 
-    public static Vector2 ToDisplayUnits(nkast.Aether.Physics2D.Common.Vector2 physicsBodyPosition)
-    {
-        // Convert Aether Physics2D Vector2 (meters) to MonoGame Vector2 (pixels)
-        return new Vector2(
-            physicsBodyPosition.X * _displayUnitsToSimUnitsRatio,
-            physicsBodyPosition.Y * _displayUnitsToSimUnitsRatio
-        );
-    }
 
 }

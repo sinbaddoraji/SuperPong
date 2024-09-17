@@ -30,7 +30,10 @@ public class PaddleBallLaunchAimer : PongGameEntity
 
     readonly IGameScreenControllerManager _gameScreenControllerManager;
 
-    public PaddleBallLaunchAimer(GraphicsDevice graphics, ref World world, IGameScreenControllerManager gameScreenControllerManager, Color color, int length, int angle,bool isPointingUpwards = true) : base(ref world)
+    private const float UnitToPixel = 100f; // Adjust as needed
+    private const float PixelToUnit = 1f / UnitToPixel;
+
+    public PaddleBallLaunchAimer(GraphicsDevice graphics, World world, IGameScreenControllerManager gameScreenControllerManager, Color color, int length, int angle,bool isPointingUpwards = true) : base(world)
     {
         _graphics = graphics;
         _color = color;
@@ -123,15 +126,11 @@ public class PaddleBallLaunchAimer : PongGameEntity
     public void LaunchBall()
     {
         // Launch the ball based on angle and rotation of the Texture
-        var launchDirection = new Vector2(0, 0);
-        if (_isPointingUpwards)
-        {
-            launchDirection = new Vector2((float)Math.Cos(MathHelper.ToRadians(_angle)), (float)Math.Sin(MathHelper.ToRadians(_angle)));
-        }
-        else
-        {
-            launchDirection = new Vector2((float)Math.Cos(MathHelper.ToRadians(_angle)), (float)Math.Sin(MathHelper.ToRadians(_angle)));
-        }
+        Vector2 launchDirection = _isPointingUpwards 
+            ? new Vector2((float)Math.Cos(MathHelper.ToRadians(_angle)), (float)Math.Sin(MathHelper.ToRadians(_angle))) 
+            : new Vector2((float)Math.Cos(MathHelper.ToRadians(_angle)), (float)Math.Sin(MathHelper.ToRadians(_angle)));
+
+        launchDirection *= PixelToUnit;
 
         OnBallLaunch.Invoke(launchDirection);
     }

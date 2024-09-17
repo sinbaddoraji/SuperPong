@@ -83,8 +83,8 @@ namespace PingPong.Screens
             _player2Panel.Texture = SimpleSprite.PaddleTexture.CreatePaddleTexture(graphicsDevice, Color.White, ScreenSize.Item1 / 2, ScreenSize.Item2);
 
             World abstratWorld = new World();
-            _player1PaddlePreview = new Paddle(graphicsDevice, ref abstratWorld, _colors[_player1ColorIndex], 200, 30);
-            _player2PaddlePreview = new Paddle(graphicsDevice, ref abstratWorld, _colors[_player2ColorIndex], 200, 30);
+            _player1PaddlePreview = new Paddle(graphicsDevice, abstratWorld, _colors[_player1ColorIndex], 200, 30);
+            _player2PaddlePreview = new Paddle(graphicsDevice, abstratWorld, _colors[_player2ColorIndex], 200, 30);
 
             // Draw the paddles to the middle of the panels
             _player1PaddlePreview.Position = new Vector2(_player1Panel.Position.X + _player1Panel.Texture.Width / 2 - _player1PaddlePreview.Texture.Width / 2,
