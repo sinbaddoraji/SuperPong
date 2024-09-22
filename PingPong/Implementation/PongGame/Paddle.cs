@@ -8,6 +8,9 @@ using PingPong.SimpleSprite;
 using System;
 using PingPong.Implementation.Controller;
 using PingPong.Interface;
+using nkast.Aether.Physics2D.Dynamics.Contacts;
+using static nkast.Aether.Physics2D.Dynamics.Contacts.ContactSolver;
+using nkast.Aether.Physics2D.Dynamics.Joints;
 
 namespace PingPong.Implementation.PongGame
 {
@@ -61,6 +64,16 @@ namespace PingPong.Implementation.PongGame
             PhysicsBody = World.CreateBody(simPosition, 0f, BodyType.Kinematic);
             PhysicsBody.Tag = "Paddle";
 
+            // In InitializePhysics, after creating the PhysicsBody
+            // var axis = new Vector2(1f, 0f); // Movement along the X-axis
+            // var joint = JointFactory.CreatePrismaticJoint(World, null, PhysicsBody, PhysicsBody.Position, axis);
+            // joint.LimitEnabled = false; // Set to true and define limits if you want to restrict the paddle's range
+
+
+            PhysicsBody.OnCollision += OnCollision;
+
+
+
             // Create rectangle vertices for the paddle
             float halfWidth = (Width / 2f) * PixelToUnit;
             float halfHeight = (Height / 2f) * PixelToUnit;
@@ -71,6 +84,7 @@ namespace PingPong.Implementation.PongGame
 
             // Attach the shape to the body as a fixture
             var fixture = PhysicsBody.CreateFixture(paddleShape);
+            fixture.Tag = "Paddle";
 
             // Set fixture properties
             fixture.Restitution = 0f;
@@ -79,6 +93,46 @@ namespace PingPong.Implementation.PongGame
             // Ensure the physics body doesn't rotate
             PhysicsBody.FixedRotation = true;
         }
+
+        private bool OnCollision(Fixture fixtureA, Fixture fixtureB, Contact contact)
+        {
+            // Get the tag of the other body
+            string otherTag = fixtureB.Body.Tag as string;
+
+            if (otherTag == "LeftWall")
+            {
+                // Collision with the left wall - push paddle to the right
+                ApplyPushback(Vector2.UnitX);
+            }
+            else if (otherTag == "RightWall")
+            {
+                // Collision with the right wall - push paddle to the left
+                ApplyPushback(-Vector2.UnitX);
+            }
+
+            // Continue with normal collision processing
+            return true;
+        }
+
+        private void ApplyPushback(Vector2 direction)
+        {
+            // Define the impulse magnitude
+            float impulseMagnitude = 0.5f; // Adjust this value as needed
+
+            // Apply the impulse to the paddle's physics body
+            PhysicsBody.ApplyLinearImpulse(direction * impulseMagnitude);
+
+            // Optionally, limit the paddle's velocity to prevent it from moving too fast
+            float maxVelocity = 5f; // Adjust as needed
+            PhysicsBody.LinearVelocity = Vector2.Clamp(
+                PhysicsBody.LinearVelocity,
+                new Vector2(-maxVelocity, 0f),
+                new Vector2(maxVelocity, 0f)
+            );
+        }
+
+
+
 
         /// <summary>
         /// Moves the paddle to a new position.

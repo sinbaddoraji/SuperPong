@@ -59,6 +59,8 @@ namespace PingPong.Screens
         public PongGameScreen(GraphicsDevice graphicsDevice, GraphicsDeviceManager graphics)
         {
             _world = new World();
+            _world.Gravity = new Vector2(0, 0);
+
 
             ScreenWidth = graphics.PreferredBackBufferWidth;
             ScreenHeight = graphics.PreferredBackBufferHeight;
@@ -223,7 +225,7 @@ namespace PingPong.Screens
                 // Player 1 scores
                 Player1Score++;
                 GameState = GameState.Player2WaitingToServe;
-                ResetBallAndPaddles();
+                 ResetBallAndPaddles();
             }
             else if (_ball.Position.Y > ArenaRectangle.Bottom)
             {
@@ -345,19 +347,20 @@ namespace PingPong.Screens
 
             // Create walls around the arena
             // Top wall
-            CreateWall(new Vector2(arenaLeft + arenaWidth / 2f, arenaTop), new Vector2(arenaWidth, 0.1f));
+            CreateWall(new Vector2(arenaLeft + arenaWidth / 2f, arenaTop), new Vector2(arenaWidth, 0.1f), "TopWall");
             // Bottom wall
-            CreateWall(new Vector2(arenaLeft + arenaWidth / 2f, arenaBottom), new Vector2(arenaWidth, 0.1f));
+            CreateWall(new Vector2(arenaLeft + arenaWidth / 2f, arenaBottom), new Vector2(arenaWidth, 0.1f), "BottomWall");
             // Left wall
-            CreateWall(new Vector2(arenaLeft, arenaTop + arenaHeight / 2f), new Vector2(0.1f, arenaHeight));
+            CreateWall(new Vector2(arenaLeft, arenaTop + arenaHeight / 2f), new Vector2(0.1f, arenaHeight), "LeftWall");
             // Right wall
-            CreateWall(new Vector2(arenaRight, arenaTop + arenaHeight / 2f), new Vector2(0.1f, arenaHeight));
+            CreateWall(new Vector2(arenaRight, arenaTop + arenaHeight / 2f), new Vector2(0.1f, arenaHeight), "RightWall");
         }
 
-        private void CreateWall(Vector2 position, Vector2 size)
+        private void CreateWall(Vector2 position, Vector2 size, string tag)
         {
             // Create a static body at the simulation position
             var wallBody = _world.CreateBody(position, 0f, BodyType.Static);
+            wallBody.Tag = tag;
 
             // Create rectangle vertices
             Vertices rectangleVertices = PolygonTools.CreateRectangle(size.X / 2f, size.Y / 2f);

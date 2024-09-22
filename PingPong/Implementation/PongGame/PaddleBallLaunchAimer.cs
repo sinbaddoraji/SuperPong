@@ -24,6 +24,9 @@ public class PaddleBallLaunchAimer : PongGameEntity
     private readonly int _maxHeight = 100;
     private readonly int _minHeight = 50;
 
+    private readonly int _maxRealForce = 1000;
+    private readonly int _minRealForce = -1000;
+
     // Release the ball event
     public delegate void BallLaunchHandler(Vector2 launchDirection);
     public event BallLaunchHandler OnBallLaunch;
@@ -68,6 +71,19 @@ public class PaddleBallLaunchAimer : PongGameEntity
         length = 200;
         Texture = LineTexture.CreateLineTexture(_graphics, _color, length);
     }
+
+    public static double Normalize(double value, double oldMin, double oldMax, double newMin, double newMax)
+    {
+        if (oldMax - oldMin == 0)
+        {
+            throw new ArgumentException("Old range cannot be zero.");
+        }
+
+        // Normalize the value
+        double normalizedValue = ((value - oldMin) / (oldMax - oldMin)) * (newMax - newMin) + newMin;
+        return normalizedValue;
+    }
+
 
     public void ChangeColor(Color color)
     {
@@ -125,14 +141,26 @@ public class PaddleBallLaunchAimer : PongGameEntity
 
     public void LaunchBall()
     {
-        // Launch the ball based on angle and rotation of the Texture
-        Vector2 launchDirection = _isPointingUpwards 
-            ? new Vector2((float)Math.Cos(MathHelper.ToRadians(_angle)), (float)Math.Sin(MathHelper.ToRadians(_angle))) 
-            : new Vector2((float)Math.Cos(MathHelper.ToRadians(_angle)), (float)Math.Sin(MathHelper.ToRadians(_angle)));
+        try
+        {
+            // Launch the ball based on angle and rotation of the Texture
 
-        launchDirection *= PixelToUnit;
+            float normalizedXPulse = (float)Normalize(_angle, _effectiveMinAngle, _effectiveMaxAngle, _minRealForce,
+                _maxRealForce);
+            float normalizedYPulse = (float)Normalize(_angle, _minHeight, _maxHeight, 150, 350);
 
-        OnBallLaunch.Invoke(launchDirection);
+            Vector2 launchDirection = _isPointingUpwards
+                ? new Vector2(normalizedXPulse, normalizedYPulse)
+                : new Vector2(normalizedXPulse * -1, normalizedYPulse);
+
+            // launchDirection *= PixelToUnit;
+
+            OnBallLaunch.Invoke(launchDirection);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
 
     public override void Draw(GameTime gameTime, SpriteBatch spriteBatch, Color color)

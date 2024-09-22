@@ -53,6 +53,7 @@ namespace PingPong.Implementation.PongGame
 
             // Create a new dynamic body at the simulation position
             PhysicsBody = World.CreateBody(simPosition, 0f, BodyType.Dynamic);
+            PhysicsBody.Tag = "Ball";
             PhysicsBody.OnCollision += OnCollision;
 
             // Create a circle shape for the ball
@@ -79,6 +80,13 @@ namespace PingPong.Implementation.PongGame
                 // The ball has collided with the paddle
                 AdjustBallVelocityBasedOnPaddleHit(contact, otherFixture);
             }
+            else
+            {
+                // The ball has collided with something else
+                // Bounce the ball off the collision normal
+                Bounce(contact.Manifold.LocalNormal);
+            }
+
 
             return true; // Return true to process the collision normally
         }
