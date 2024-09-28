@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Graphics;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Collision.Shapes;
 using PingPong.Enum;
-using PingPong.Helpers;
 using PingPong.Implementation.Controller;
 using PingPong.Implementation.PongGame;
 using PingPong.Interface;
@@ -370,10 +369,11 @@ namespace PingPong.Screens
 
             // Attach the shape to the body as a fixture
             var fixture = wallBody.CreateFixture(rectangleShape);
+            fixture.Tag = tag;
 
             // Set fixture properties
             fixture.Restitution = 1f;
-            fixture.Friction = 0f;
+            fixture.Friction = 1f;
         }
 
     }

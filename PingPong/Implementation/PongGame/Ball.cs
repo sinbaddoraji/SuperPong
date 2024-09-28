@@ -3,12 +3,12 @@ using Microsoft.Xna.Framework.Graphics;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Collision.Shapes;
 using PingPong.SimpleSprite;
-using PingPong.Helpers;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
 using nkast.Aether.Physics2D.Collision;
 using static nkast.Aether.Physics2D.Dynamics.Contacts.ContactSolver;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using nkast.Aether.Physics2D.Common;
 
 namespace PingPong.Implementation.PongGame
@@ -20,11 +20,10 @@ namespace PingPong.Implementation.PongGame
     {
         private readonly float _radius;
 
-        // Conversion factor between simulation units (meters) and pixels
-        private const float UnitToPixel = 100f; // Adjust as needed
-        private const float PixelToUnit = 1f / UnitToPixel;
-
         public int PaddleWidth { get; set; } = 200;
+
+        public event EventHandler<string> OnBallHitWall;
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Ball"/> class.
@@ -39,6 +38,11 @@ namespace PingPong.Implementation.PongGame
 
             // Create ball texture
             Texture = BallTexture.CreateBallTexture(graphics, color, diameter);
+
+            OnBallHitWall += (sender, args) =>
+            {
+                Debug.WriteLine($"Ball hit {args}");
+            };
         }
 
 
@@ -75,6 +79,12 @@ namespace PingPong.Implementation.PongGame
 
         private bool HandleCollisionWithPaddle(Fixture otherFixture, Contact contact)
         {
+            if (otherFixture.Tag.Equals("TopWall") || otherFixture.Tag.Equals("BottomWall"))
+            {
+                // Call event handler
+                OnBallHitWall?.Invoke(this, otherFixture.Tag.ToString());
+            }
+
             if (otherFixture.Tag != null && otherFixture.Tag.Equals("Paddle"))
             {
                 // The ball has collided with the paddle

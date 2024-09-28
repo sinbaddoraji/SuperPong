@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Collision.Shapes;
 using nkast.Aether.Physics2D.Common;
-using PingPong.Helpers;
 using PingPong.SimpleSprite;
 using System;
 using PingPong.Implementation.Controller;
@@ -64,15 +63,7 @@ namespace PingPong.Implementation.PongGame
             PhysicsBody = World.CreateBody(simPosition, 0f, BodyType.Kinematic);
             PhysicsBody.Tag = "Paddle";
 
-            // In InitializePhysics, after creating the PhysicsBody
-            // var axis = new Vector2(1f, 0f); // Movement along the X-axis
-            // var joint = JointFactory.CreatePrismaticJoint(World, null, PhysicsBody, PhysicsBody.Position, axis);
-            // joint.LimitEnabled = false; // Set to true and define limits if you want to restrict the paddle's range
-
-
             PhysicsBody.OnCollision += OnCollision;
-
-
 
             // Create rectangle vertices for the paddle
             float halfWidth = (Width / 2f) * PixelToUnit;
@@ -87,8 +78,8 @@ namespace PingPong.Implementation.PongGame
             fixture.Tag = "Paddle";
 
             // Set fixture properties
-            fixture.Restitution = 0f;
-            fixture.Friction = 0f;
+            fixture.Restitution = 1f;
+            fixture.Friction = 1f;
 
             // Ensure the physics body doesn't rotate
             PhysicsBody.FixedRotation = true;

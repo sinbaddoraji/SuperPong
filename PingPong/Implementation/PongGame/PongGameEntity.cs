@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
-using PingPong.Helpers;
 
 namespace PingPong.Implementation.PongGame
 {
